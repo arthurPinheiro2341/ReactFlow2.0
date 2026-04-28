@@ -7,9 +7,8 @@ import { ButtonNode } from './nodes/ButtonNode';
 import { LEDNode } from './nodes/LEDNode';
 import { DigitNode } from './nodes/DigitNode';
 import { GNDNode } from './nodes/GNDNode';
-import { RGBLEDNode } from './nodes/RGBLEDNode'; // Importe o RGB que criamos
+import { RGBLEDNode } from './nodes/RGBLEDNode';
 
-// Registra os tipos de nós
 const nodeTypes = { 
   button: ButtonNode, 
   led: LEDNode, 
@@ -28,7 +27,20 @@ export default function App() {
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState([]);
 
-  // Função para adicionar novos componentes com cores específicas
+  // --- 1. FUNÇÃO PARA REMOVER O NÓ E SEUS FIOS ---
+  const onDeleteNode = useCallback((id) => {
+    setNodes((nds) => nds.filter((node) => node.id !== id));
+    setEdges((eds) => eds.filter((edge) => edge.source !== id && edge.target !== id));
+  }, []);
+
+  // --- 2. FUNÇÃO PARA DELETAR SELECIONADOS ---
+  const deleteSelectedNodes = useCallback(() => {
+    // Filtramos quem está com a propriedade 'selected' ativa
+    const selectedNodes = nodes.filter((n) => n.selected);
+    selectedNodes.forEach((node) => onDeleteNode(node.id));
+  }, [nodes, onDeleteNode]);
+
+  // Adicionar novos componentes
   const addNode = useCallback((type, color = '#ffeb3b') => {
     const id = `${type}-${Date.now()}`; 
     const newNode = {
@@ -42,62 +54,40 @@ export default function App() {
     setNodes((nds) => nds.concat(newNode));
   }, [setNodes]);
 
-  // --- LÓGICA DO CIRCUITO COMPLETO ---
+  // Lógica do Circuito (Simulação)
   useEffect(() => {
     setNodes((nds) =>
       nds.map((node) => {
-        
-        // 1. Lógica para o LED NORMAL (Cores fixas)
         if (node.type === 'led') {
-          const hasSignal = edges.some(e => 
-            e.target === node.id && e.targetHandle === 'vcc' && nds.find(n => n.id === e.source)?.data?.pressed
-          );
-          const hasGround = edges.some(e => 
-            e.target === node.id && e.targetHandle === 'gnd' && nds.find(n => n.id === e.source)?.type === 'gnd'
-          );
+          const hasSignal = edges.some(e => e.target === node.id && e.targetHandle === 'vcc' && nds.find(n => n.id === e.source)?.data?.pressed);
+          const hasGround = edges.some(e => e.target === node.id && e.targetHandle === 'gnd' && nds.find(n => n.id === e.source)?.type === 'gnd');
           return { ...node, data: { ...node.data, active: hasSignal && hasGround } };
         }
 
-        // 2. Lógica para o LED RGB (Mistura de cores)
         if (node.type === 'rgb_led') {
           const hasGnd = edges.some(e => e.target === node.id && e.targetHandle === 'gnd' && nds.find(n => n.id === e.source)?.type === 'gnd');
-          
-          const checkChannel = (channelId) => edges.some(e => 
-            e.target === node.id && e.targetHandle === channelId && nds.find(n => n.id === e.source)?.data?.pressed
-          );
-
-          return { 
-            ...node, 
-            data: { 
-              ...node.data, 
-              r: checkChannel('r'), g: checkChannel('g'), b: checkChannel('b'), gnd: hasGnd 
-            } 
-          };
+          const checkChannel = (channelId) => edges.some(e => e.target === node.id && e.targetHandle === channelId && nds.find(n => n.id === e.source)?.data?.pressed);
+          return { ...node, data: { ...node.data, r: checkChannel('r'), g: checkChannel('g'), b: checkChannel('b'), gnd: hasGnd } };
         }
 
-        // 3. Lógica para o Display de 7 Segmentos
         if (node.type === 'digit') {
           const hasGround = edges.some(e => e.target === node.id && e.targetHandle === 'gnd-common' && nds.find(n => n.id === e.source)?.type === 'gnd');
           const activeSegments = { a: false, b: false, c: false, d: false, e: false, f: false, g: false };
-
           if (hasGround) {
             edges.forEach(edge => {
               if (edge.target === node.id && edge.targetHandle !== 'gnd-common') {
-                if (nds.find(n => n.id === edge.source)?.data?.pressed) {
-                  activeSegments[edge.targetHandle] = true;
-                }
+                if (nds.find(n => n.id === edge.source)?.data?.pressed) activeSegments[edge.targetHandle] = true;
               }
             });
           }
           return { ...node, data: { ...node.data, activeSegments } };
         }
-
         return node;
       })
     );
   }, [edges, nodes.map(n => n.data?.pressed).join(',')]);
 
-  // Handlers
+  // Handlers do React Flow
   const onEdgeClick = useCallback((_, edge) => setEdges((eds) => eds.filter((e) => e.id !== edge.id)), []);
   const onNodesChange = useCallback((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
   const onEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
@@ -107,28 +97,54 @@ export default function App() {
     setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, pressed: !n.data.pressed } } : n));
   };
 
+  // Injetar funções nos nós
   const nodesWithLogic = nodes.map((node) => {
-    if (node.type === 'button') {
-      return { ...node, data: { ...node.data, onToggle: () => toggleButton(node.id) } };
-    }
-    return node;
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        onDelete: () => onDeleteNode(node.id),
+        onToggle: node.type === 'button' ? () => toggleButton(node.id) : undefined,
+      },
+    };
   });
 
+  // --- ÚNICO RETURN DO COMPONENTE ---
   return (
     <div className="app" style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       
-      {/* Painel de Ferramentas Atualizado */}
+      {/* Painel de Ferramentas Único */}
       <div style={{ 
         position: 'absolute', zIndex: 10, padding: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap',
-        background: 'rgba(0, 0, 0, 0.6)', borderRadius: '8px', margin: '10px', maxWidth: '400px'
+        background: 'rgba(0, 0, 0, 0.7)', borderRadius: '8px', margin: '10px', maxWidth: '550px',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.5)', border: '1px solid #444'
       }}>
+        {/* Adição de nós */}
         <button style={{ cursor: 'pointer' }} onClick={() => addNode('button')}>+ Botão</button>
         <button style={{ cursor: 'pointer', color: '#ff4444' }} onClick={() => addNode('led', '#ff4444')}>+ LED Vermelho</button>
         <button style={{ cursor: 'pointer', color: '#44ff44' }} onClick={() => addNode('led', '#44ff44')}>+ LED Verde</button>
         <button style={{ cursor: 'pointer', color: '#4444ff' }} onClick={() => addNode('led', '#4444ff')}>+ LED Azul</button>
-        <button style={{ cursor: 'pointer', fontWeight: 'bold' }} onClick={() => addNode('rgb_led')}>+ LED RGB</button>
+        <button style={{ cursor: 'pointer', fontWeight: 'bold', color: '#fff' }} onClick={() => addNode('rgb_led')}>+ LED RGB</button>
         <button style={{ cursor: 'pointer' }} onClick={() => addNode('digit')}>+ Display</button>
-        <button style={{ cursor: 'pointer' }} onClick={() => addNode('gnd')}>+ Terra (GND)</button>
+        <button style={{ cursor: 'pointer' }} onClick={() => addNode('gnd')}>+ GND</button>
+
+        {/* Divisor Visual */}
+        <div style={{ width: '1px', background: '#555', margin: '0 5px' }} />
+
+        {/* Ações de exclusão */}
+        <button 
+          style={{ cursor: 'pointer', background: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 8px', fontWeight: 'bold' }} 
+          onClick={deleteSelectedNodes}
+        >
+          Excluir Selecionado
+        </button>
+
+        <button 
+          style={{ cursor: 'pointer', background: '#d32f2f', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 8px' }} 
+          onClick={() => { if(window.confirm("Limpar toda a placa?")) { setNodes([]); setEdges([]); } }}
+        >
+          🗑️ Limpar Placa
+        </button>
       </div>
 
       <ReactFlow
@@ -138,10 +154,11 @@ export default function App() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onEdgeClick={onEdgeClick}
+        onNodesDelete={(deleted) => deleted.forEach(n => onDeleteNode(n.id))}
         nodeTypes={nodeTypes}
         fitView
       >
-        <Background color="#333" gap={20} />
+        <Background color="#1a1a1a" gap={20} />
         <Controls />
       </ReactFlow>
     </div>

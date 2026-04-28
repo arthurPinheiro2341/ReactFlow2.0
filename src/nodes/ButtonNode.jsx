@@ -2,7 +2,7 @@ import React from 'react';
 import { Handle, Position } from 'reactflow';
 
 export const ButtonNode = ({ data }) => {
-  const { color = '#d32f2f', pressed, onToggle } = data;
+  const { color = '#5a5858', pressed, onToggle } = data;
 
   return (
     <div
