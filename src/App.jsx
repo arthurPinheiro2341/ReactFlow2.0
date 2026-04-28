@@ -41,7 +41,7 @@ export default function App() {
   }, [nodes, onDeleteNode]);
 
   // Adicionar novos componentes
-  const addNode = useCallback((type, color = '#ffeb3b') => {
+  const addNode = useCallback((type, color = '#5a5858') => {
     const id = `${type}-${Date.now()}`; 
     const newNode = {
       id: id,
