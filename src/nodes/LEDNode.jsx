@@ -1,10 +1,22 @@
+/**
+ * ARQUIVO: LEDNode.jsx
+ * DESCRIÇÃO: Representação visual de um LED (Diodo Emissor de Luz).
+ * Este componente atua como um "Atuador" ou "Alvo" (Target). Ele reage
+ * aos sinais elétricos recebidos: acende quando há diferença de potencial 
+ * entre o Ânodo (VCC) e o Cátodo (GND).
+ */
+
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 
 export const LEDNode = ({ data }) => {
+  // Extração das propriedades: cor do brilho e estado (ligado/desligado)
   const { color = '#ffeb3b', active } = data;
 
-  // Estilo comum para as perninhas de metal
+  /**
+   * Estilo auxiliar para as perninhas de metal do LED.
+   * Simula o aspecto físico de um componente real de eletrônica.
+   */
   const legStyle = (height) => ({
     width: '2px',
     height: height,
@@ -18,12 +30,15 @@ export const LEDNode = ({ data }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       
-      {/* 1. Cabeça do LED (Domo) */}
+      {/* 1. CABEÇA DO LED (DOMO)
+          A lógica de gradiente e sombra (boxShadow) cria o efeito de "brilho neon"
+          quando a propriedade 'active' é verdadeira.
+      */}
       <div
         style={{
           width: '34px',
           height: '34px',
-          borderRadius: '50% 50% 10% 10%',
+          borderRadius: '50% 50% 10% 10%', // Formato clássico de domo de LED
           background: active 
             ? `radial-gradient(circle at 30% 30%, #fff, ${color} 40%, #000)` 
             : `radial-gradient(circle at 30% 30%, #555, #111)`,
@@ -35,13 +50,20 @@ export const LEDNode = ({ data }) => {
         }}
       />
 
-      {/* 2. Base do LED */}
+      {/* 2. BASE DO LED
+          O anel de plástico na base do componente.
+      */}
       <div style={{ width: '38px', height: '4px', background: '#333', borderRadius: '1px', marginTop: '-2px', zIndex: 1 }} />
 
-      {/* 3. As Perninhas (Pau pra baixo) */}
+      {/* 3. AS PERNINHAS (CONEXÕES FÍSICAS)
+          No mundo real, o LED tem uma perna maior que a outra. 
+          Aqui replicamos isso para diferenciar a Entrada de Sinal do Terra.
+      */}
       <div style={{ display: 'flex', alignItems: 'flex-start' }}>
         
-        {/* Perninha Longa (Ânodo / Sinal VCC) */}
+        {/* PERNINHA LONGA (Ânodo / Entrada VCC)
+            Handle configurado como 'target' para receber o sinal positivo.
+        */}
         <div style={legStyle('40px')}>
           <Handle 
             type="target" 
@@ -51,7 +73,9 @@ export const LEDNode = ({ data }) => {
           />
         </div>
 
-        {/* Perninha Curta (Cátodo / Terra GND) */}
+        {/* PERNINHA CURTA (Cátodo / Terra GND)
+            Handle configurado como 'target' para fechar o circuito no terra.
+        */}
         <div style={legStyle('25px')}>
           <Handle 
             type="target" 
