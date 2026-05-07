@@ -1,47 +1,48 @@
 /**
  * ARQUIVO: useKeyboard.js
- * DESCRIÇÃO: Este Custom Hook gerencia a entrada de dados via teclado.
- * Ele mapeia teclas físicas para ações dentro do simulador, permitindo que 
- * componentes como botões sejam acionados remotamente sem a necessidade de clique.
+ * DESCRIÇÃO: Gerencia o mapeamento do teclado físico para os componentes virtuais.
+ * Diferencia entre Botões (pulso ao pressionar/soltar) e Switches (toggle no pressionar).
  */
 
 import { useEffect } from 'react';
 
-export const useKeyboard = (nodes, toggleButton) => {
+export const useKeyboard = (nodes, setButtonState, toggleButton) => {
   useEffect(() => {
-    /**
-     * Função interna para processar o evento de tecla pressionada.
-     */
+    
+    // Função disparada ao pressionar uma tecla
     const handleKeyDown = (event) => {
-      // MECANISMO DE DEBOUNCE: Impede que o sinal "trema" ou dispare múltiplas vezes
-      // caso o usuário mantenha a tecla pressionada.
-      if (event.repeat) return; 
+      if (event.target.tagName === 'INPUT' || event.repeat) return;
 
-      // Converte a tecla para minúsculo para garantir consistência (ex: 'A' e 'a')
       const key = event.key.toLowerCase();
-
-      // Busca na lista de nós se existe algum componente do tipo 'button'
-      // que possua a tecla disparada configurada em seu 'hotkey'.
-      const button = nodes.find(n => n.type === 'button' && n.data.hotkey === key);
+      const component = nodes.find(n => n.data.hotkey === key);
       
-      // Se encontrar um botão correspondente, executa a função de alternar estado
-      if (button) {
-        toggleButton(button.id);
+      if (component) {
+        if (component.type === 'button') {
+          setButtonState(component.id, true); // Ativa o pulso
+        } else if (component.type === 'switch') {
+          toggleButton(component.id); // Inverte o estado da alavanca
+        }
       }
     };
 
-    // ADICIONA O OUVINTE: Registra o evento no objeto 'window' do navegador
-    window.addEventListener('keydown', handleKeyDown);
-
-    // LIMPEZA (Cleanup): Remove o ouvinte quando o componente é desmontado.
-    // Isso evita "memory leaks" e comportamentos estranhos em outras telas do app.
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+    // Função disparada ao soltar uma tecla
+    const handleKeyUp = (event) => {
+      const key = event.key.toLowerCase();
+      const component = nodes.find(n => n.data.hotkey === key);
+      
+      // Apenas botões precisam "limpar" o sinal ao soltar a tecla
+      if (component && component.type === 'button') {
+        setButtonState(component.id, false);
+      }
     };
 
-    /**
-     * DEPENDÊNCIAS: O hook reinicia se a lista de nós mudar ou se a função 
-     * toggleButton for redefinida, garantindo que o mapeamento esteja sempre atualizado.
-     */
-  }, [nodes, toggleButton]);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+
+  }, [nodes, setButtonState, toggleButton]);
 };
