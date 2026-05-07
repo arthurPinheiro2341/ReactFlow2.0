@@ -38,7 +38,7 @@ export const LEDNode = ({ data }) => {
         style={{
           width: '34px',
           height: '34px',
-          borderRadius: '50% 50% 10% 10%', // Formato clássico de domo de LED
+          borderRadius: '50% 50% 10% 10%', 
           background: active 
             ? `radial-gradient(circle at 30% 30%, #fff, ${color} 40%, #000)` 
             : `radial-gradient(circle at 30% 30%, #555, #111)`,
@@ -55,9 +55,8 @@ export const LEDNode = ({ data }) => {
       */}
       <div style={{ width: '38px', height: '4px', background: '#333', borderRadius: '1px', marginTop: '-2px', zIndex: 1 }} />
 
-      {/* 3. AS PERNINHAS (CONEXÕES FÍSICAS)
-          No mundo real, o LED tem uma perna maior que a outra. 
-          Aqui replicamos isso para diferenciar a Entrada de Sinal do Terra.
+      {/* 3. AS PERNINHAS 
+          
       */}
       <div style={{ display: 'flex', alignItems: 'flex-start' }}>
         

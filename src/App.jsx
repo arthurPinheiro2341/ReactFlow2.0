@@ -20,10 +20,10 @@ const HotkeySidebar = ({ nodes, onHotkeyChange }) => {
 
   return (
     <div style={{
-      position: 'fixed', // Mudamos para FIXED para garantir que apareça na tela
+      position: 'fixed', 
       right: '20px', 
       top: '20px', 
-      zIndex: 9999, // Z-index bem alto para ficar na frente de tudo
+      zIndex: 9999, // Z-index alto para ficar na frente da tela
       width: '200px', 
       background: '#1a1a1a', 
       padding: '15px',
@@ -97,7 +97,7 @@ export default function App() {
     const newNode = { 
       id, type, 
       position: { x: 400, y: 200 }, 
-      data: { color, pressed: false, hotkey: '' } // Inicializamos a hotkey vazia
+      data: { color, pressed: false, hotkey: '' } // Inicializar a hotkey vazia
     };
     setNodes((nds) => nds.concat(newNode));
   };
