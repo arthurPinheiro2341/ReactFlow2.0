@@ -1,83 +1,51 @@
 /**
  * ARQUIVO: DigitNode.jsx
- * DESCRIÇÃO: Representação visual de um Display de 7 Segmentos (Catodo Comum).
- * Este componente recebe sinais individuais para cada segmento (A até G) e
- * um sinal de aterramento (GND). Ele renderiza graficamente os LEDs acesos 
- * formando números ou letras.
+ * CAMADA: Component Layer / Output Actuator
+ * DESCRIÇÃO: Implementa a lógica de um decodificador de 7 segmentos.
  */
 
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 
 export const DigitNode = ({ data }) => {
-    // Recupera o estado de cada segmento (true = aceso, false = apagado)
-    // data.activeSegments é provido pela lógica de circuito no useCircuit.js
-    const segments = data.activeSegments || {};
+  const value = data.value ?? null;
 
-    /**
-     * Função auxiliar para gerar o estilo dinâmico de cada segmento.
-     * Define a cor (vermelho brilhante ou bordô escuro) e o efeito de brilho (glow).
-     */
-    const segStyle = (isOn) => ({
-        background: isOn ? '#ff0000' : '#220000', // Vermelho vivo se ativo, quase preto se inativo
-        boxShadow: isOn ? '0 0 10px #ff0000' : 'none', // Efeito neon quando o segmento está ligado
-        position: 'absolute',
-        borderRadius: '2px',
-        transition: 'all 0.1s' // Suaviza a transição entre aceso/apagado
-    });
+  {/* TABELA DE VERDADE (Lookup Table - LUT):
+      Mapeamento binário padrão para displays de Catodo Comum. */}
+  const segmentsMap = {
+    0: [1,1,1,1,1,1,0], 1: [0,1,1,0,0,0,0], 2: [1,1,0,1,1,0,1],
+    3: [1,1,1,1,0,0,1], 4: [0,1,1,0,0,1,1], 5: [1,0,1,1,0,1,1],
+    6: [1,0,1,1,1,1,1], 7: [1,1,1,0,0,0,0], 8: [1,1,1,1,1,1,1], 9: [1,1,1,1,0,1,1]
+  };
 
-    return (
-        <div style={{ 
-            background: '#111', 
-            padding: '20px 10px', 
-            borderRadius: '4px', 
-            border: '2px solid #444', 
-            position: 'relative' 
-        }}>
-            {/* 7 ENTRADAS DE SINAL (A até G)
-                Cada Handle representa um pino de entrada para um segmento específico.
-                Posicionados à esquerda para facilitar a conexão com barramentos de dados.
-            */}
-            <Handle type="target" position={Position.Left} id="a" style={{ top: '15%', background: '#777' }} />
-            <Handle type="target" position={Position.Left} id="b" style={{ top: '25%', background: '#777' }} />
-            <Handle type="target" position={Position.Left} id="c" style={{ top: '35%', background: '#777' }} />
-            <Handle type="target" position={Position.Left} id="d" style={{ top: '45%', background: '#777' }} />
-            <Handle type="target" position={Position.Left} id="e" style={{ top: '55%', background: '#777' }} />
-            <Handle type="target" position={Position.Left} id="f" style={{ top: '65%', background: '#777' }} />
-            <Handle type="target" position={Position.Left} id="g" style={{ top: '75%', background: '#777' }} />
-            
-            {/* PINO DE TERRA COMUM (GND)
-                Localizado na parte inferior do componente.
-            */}
-            <Handle
-                type="target"
-                position={Position.Bottom}
-                id="gnd-common"
-                style={{ background: '#555', left: '50%' }}
-            />
+  const active = segmentsMap[value] || [0,0,0,0,0,0,0];
 
-            {/* REPRESENTAÇÃO GEOMÉTRICA DO DISPLAY
-                Container relativo onde os 7 segmentos são posicionados de forma absoluta
-                seguindo o padrão industrial de displays de 7 segmentos.
-            */}
-            <div style={{ position: 'relative', width: '30px', height: '55px', margin: '0 auto' }}>
-                {/* Segmento Superior */}
-                <div style={{ ...segStyle(segments.a), top: 0, left: '4px', width: '22px', height: '5px' }} />
-                
-                {/* Segmentos Laterais Superiores */}
-                <div style={{ ...segStyle(segments.b), top: '4px', right: 0, width: '5px', height: '20px' }} />
-                <div style={{ ...segStyle(segments.f), top: '4px', left: 0, width: '5px', height: '20px' }} />
-                
-                {/* Segmento Central (Meio) */}
-                <div style={{ ...segStyle(segments.g), top: '25px', left: '4px', width: '22px', height: '5px' }} />
-                
-                {/* Segmentos Laterais Inferiores */}
-                <div style={{ ...segStyle(segments.c), bottom: '4px', right: 0, width: '5px', height: '20px' }} />
-                <div style={{ ...segStyle(segments.e), bottom: '4px', left: 0, width: '5px', height: '20px' }} />
-                
-                {/* Segmento Inferior (Base) */}
-                <div style={{ ...segStyle(segments.d), bottom: 0, left: '4px', width: '22px', height: '5px' }} />
-            </div>
-        </div>
-    );
+  const segStyle = (isOn) => ({
+    background: isOn ? '#ff0000' : '#220000',
+    boxShadow: isOn ? '0 0 8px #ff0000' : 'none',
+    position: 'absolute', 
+    borderRadius: '2px',
+    transition: 'all 0.1s ease'
+  });
+
+  return (
+    <div style={{ background: '#111', padding: '10px', borderRadius: '4px', border: '2px solid #444', display: 'flex' }}>
+      
+      {/* TERMINAL DE ENTRADA (SINK):
+          Recebe sinais de barramento provenientes de fontes de dados. */}
+      <Handle type="target" position={Position.Left} id="in" style={{ background: '#777' }} />
+
+      {/* GEOMETRIA DO DISPLAY:
+          Posicionamento absoluto dos segmentos seguindo o padrão industrial (a-g). */}
+      <div style={{ position: 'relative', width: '20px', height: '40px' }}>
+        <div style={{ ...segStyle(active[0]), top: 0, left: '2px', width: '16px', height: '3px' }} /> {/* a */}
+        <div style={{ ...segStyle(active[1]), top: '2px', right: 0, width: '3px', height: '16px' }} /> {/* b */}
+        <div style={{ ...segStyle(active[2]), bottom: '2px', right: 0, width: '3px', height: '16px' }} /> {/* c */}
+        <div style={{ ...segStyle(active[3]), bottom: 0, left: '2px', width: '16px', height: '3px' }} /> {/* d */}
+        <div style={{ ...segStyle(active[4]), bottom: '2px', left: 0, width: '3px', height: '16px' }} /> {/* e */}
+        <div style={{ ...segStyle(active[5]), top: '2px', left: 0, width: '3px', height: '16px' }} /> {/* f */}
+        <div style={{ ...segStyle(active[6]), top: '18px', left: '2px', width: '16px', height: '3px' }} /> {/* g */}
+      </div>
+    </div>
+  );
 };

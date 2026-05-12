@@ -1,74 +1,73 @@
 /**
  * ARQUIVO: SwitchNode.jsx
- * DESCRIÇÃO: Representação visual de um disjuntor (Circuit Breaker).
- * Possui um design industrial robusto com uma alavanca larga. 
- * O estado é indicado apenas pela posição física da chave.
+ * CAMADA: Component Layer / Input Node (Latching)
+ * DESCRIÇÃO: Implementa uma chave com retenção de estado.
+ * Atua como uma fonte de sinal persistente no grafo, simulando o 
+ * fechamento de malha em disjuntores ou chaves seletoras.
  */
 
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 
 export const SwitchNode = ({ data }) => {
+  /* DESESTRUTURAÇÃO DE DADOS:
+     - pressed: Estado booleano persistente.
+     - onToggle: Função disparada pelo App.jsx que inverte o bit de estado no grafo.
+  */
   const { pressed, onToggle } = data;
-
+  
   return (
-    <div
-      onClick={onToggle}
-      style={{
-        width: '45px', 
-        height: '75px', 
-        background: '#333',
-        borderRadius: '3px', 
-        border: '2px solid #1a1a1a',
+    <div 
+      onClick={onToggle} 
+      style={{ 
+        width: '35px', 
+        height: '60px', 
+        background: '#333', 
+        border: '2px solid #1a1a1a', 
+        cursor: 'pointer', 
+        position: 'relative', 
         display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center',
         justifyContent: 'center', 
-        cursor: 'pointer',
-        boxShadow: '4px 4px 10px rgba(0,0,0,0.5), inset 0 0 5px rgba(255,255,255,0.1)',
-        position: 'relative'
+        /* LÓGICA DE ATUADOR MECÂNICO:
+           Utiliza a propriedade 'align-items' para transladar o "manípulo" da chave.
+           - 'flex-start' (Topo) representa o estado FECHADO/ATIVO (ON).
+           - 'flex-end' (Base) representa o estado ABERTO/INATIVO (OFF).
+        */
+        alignItems: pressed ? 'flex-start' : 'flex-end',
+        padding: '4px',
+        borderRadius: '3px',
+        transition: 'all 0.2s ease-in-out' // Simula a inércia mecânica da chave
       }}
     >
-      {/* Detalhes estéticos do trilho do disjuntor */}
-      <div style={{ position: 'absolute', top: '5px', width: '80%', height: '2px', background: '#222' }} />
-      <div style={{ position: 'absolute', bottom: '5px', width: '80%', height: '2px', background: '#222' }} />
-
-      {/* Handles de conexão */}
-      <Handle type="source" position={Position.Left} id="in" style={{ background: '#777', width: '8px', height: '4px', borderRadius: '0' }} />
-      <Handle type="source" position={Position.Right} id="out" style={{ background: '#777', width: '8px', height: '4px', borderRadius: '0' }} />
-
-      {/* CAVIDADE DA ALAVANCA */}
-      <div style={{
-        width: '28px',
-        height: '50px',
-        background: '#1a1a1a',
-        borderRadius: '2px',
-        display: 'flex',
-        alignItems: pressed ? 'flex-start' : 'flex-end', // Altera a posição do bloco
-        padding: '2px',
-        boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.8)'
-      }}>
-        {/* A ALAVANCA (ESTILO BLOCO) */}
-        <div style={{
-          width: '100%',
-          height: '24px',
-          background: pressed ? '#555' : '#444',
-          borderRadius: '2px',
-          border: '1px solid #222',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '4px 0',
-          transition: 'all 0.1s ease-in-out',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2)'
-        }}>
-          {/* Frisos da alavanca para "grip" */}
-          <div style={{ width: '12px', height: '2px', background: '#222' }} />
-          <div style={{ width: '12px', height: '2px', background: '#222' }} />
-          <div style={{ width: '12px', height: '2px', background: '#222' }} />
-        </div>
-      </div>
+      {/* SAÍDA DE SINAL (Source):
+          Interface de saída única posicionada no eixo X positivo (Right).
+          O id "out" é mapeado pelo motor 'useCircuit' para propagar o nível lógico.
+      */}
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        id="out" 
+        style={{ 
+          background: '#777', 
+          width: '8px', 
+          height: '4px', 
+          borderRadius: '0',
+          right: '-5px' 
+        }} 
+      />
+      
+      {/* MANÍPULO DA CHAVE (Switch Lever):
+          Representação visual da parte móvel do disjuntor.
+          O gradiente interno (boxShadow inset) fornece a percepção de volume 3D.
+      */}
+      <div style={{ 
+        width: '100%', 
+        height: '25px', 
+        background: pressed ? '#555' : '#555', // Feedback de cor: Verde para ON, Cinza para OFF
+        border: '1px solid #111',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)',
+        transition: 'background 0.3s ease'
+      }} />
     </div>
   );
 };

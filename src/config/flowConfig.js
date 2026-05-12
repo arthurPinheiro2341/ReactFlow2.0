@@ -1,64 +1,52 @@
 /**
  * ARQUIVO: flowConfig.js
- * DESCRIÇÃO: Este arquivo funciona como o "Mapa de Registro" do simulador.
- * Aqui definimos o inventário de peças disponíveis e o layout inicial da placa.
- * Centralizar essas configurações facilita a adição de novos componentes no futuro.
+ * CAMADA: Configuration / Registry Layer
+ * DESCRIÇÃO: Define o mapeamento de tipos de nós e o estado inicial do grafo.
+ * Este arquivo é essencial para a extensibilidade do sistema (Open/Closed Principle).
  */
 
-// Importação dos modelos visuais e lógicos de cada componente de hardware
 import { ButtonNode } from '../nodes/ButtonNode';
 import { LEDNode } from '../nodes/LEDNode';
 import { DigitNode } from '../nodes/DigitNode';
-import { GNDNode } from '../nodes/GNDNode';
 import { RGBLEDNode } from '../nodes/RGBLEDNode';
 import { SwitchNode } from '../nodes/SwitchNode';
+import { ConstantNode } from '../nodes/ConstantNode';
+import { FPGANode } from '../nodes/FPGANode';
 
 /**
- * 1. REGISTRO DOS TIPOS DE NÓS (nodeTypes)
- * Este objeto é o "dicionário" que o React Flow usa para traduzir strings de texto 
- * em componentes React reais. Se você criar um 'type: "and_gate"', deverá registrá-lo aqui.
+ * REGISTRO DE TIPOS (nodeTypes):
+ * Este objeto mapeia strings identificadoras aos componentes React correspondentes.
+ * Quando o React Flow encontra um nó com type: 'fpga', ele consulta este registro
+ * para saber qual lógica de renderização e quais Handles (pinos) deve carregar.
  */
 export const nodeTypes = {
     button: ButtonNode,
     led: LEDNode,
     digit: DigitNode,
-    gnd: GNDNode,
     switch: SwitchNode,
-    rgb_led: RGBLEDNode 
-    
+    rgb_led: RGBLEDNode,
+    constant: ConstantNode,
+    fpga: FPGANode // Integração do Core de Lógica Programável
 };
 
 /**
- * 2. ESTADO INICIAL DA PLACA (initialNodes)
- * Define os componentes que já nascem posicionados na tela ao carregar o simulador.
- * Útil para criar exemplos prontos ou tutoriais para os usuários.
+ * ESTADO INICIAL (initialNodes):
+ * Define a topografia inicial do circuito ao carregar a aplicação.
+ * Útil para testes de integração e validação de fluxo de dados (Smoke Testing).
  */
 export const initialNodes = [
-
-    {
-        id: 'sw-1',
-        type: 'switch', // Alterado para switch para demonstrar o novo componente
-        position: { x: 50, y: 150 },
-        data: { pressed: false, hotkey: 's' }
+    // Instancia um Data Bus na coordenada (50, 50) com valor default 5
+    { 
+      id: 'const-1', 
+      type: 'constant', 
+      position: { x: 50, y: 50 }, 
+      data: { value: 5 } 
     },
-    {
-        id: 'btn-1',
-        type: 'button',
-        position: { x: 50, y: 50 },
-        // Data: propriedades iniciais, como a tecla de atalho mapeada
-        data: { pressed: false, hotkey: 'a' }
-    },
-    {
-        id: 'led-1',
-        type: 'led',
-        position: { x: 400, y: 50 },
-        // Data: cor do LED e estado inicial (apagado)
-        data: { color: '#ff4444', active: false }
-    },
-    {
-        id: 'gnd-1',
-        type: 'gnd',
-        position: { x: 400, y: 300 },
-        data: {}
-    },
+    // Instancia um Display Decodificador na coordenada (250, 50)
+    { 
+      id: 'digit-1', 
+      type: 'digit', 
+      position: { x: 250, y: 50 }, 
+      data: { value: 0 } 
+    }
 ];
