@@ -1,10 +1,10 @@
 ﻿/**
  * ARQUIVO: App.jsx
- * CAMADA: Orchestration & State Management
+ * CORREÇÃO: Restauração da lógica da FPGA + Overlay Móvel
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import ReactFlow, { Background, Controls, addEdge, applyEdgeChanges, applyNodeChanges } from 'reactflow';
+import ReactFlow, { Background, Controls, Panel, addEdge, applyEdgeChanges, applyNodeChanges } from 'reactflow';
 import 'reactflow/dist/style.css';
 import './App.css';
 
@@ -13,29 +13,20 @@ import { useCircuit } from './hooks/useCircuit';
 import { useKeyboard } from './hooks/useKeyboard';
 import { Toolbar } from './components/Toolbar';
 
-// --- COMPONENTE: PAINEL DE CONFIGURAÇÃO (SIDEBAR) ---
+import overlayImage from './assets/Capivara.jpeg';
+
+// --- SIDEBAR DE TECLAS ---
 const HotkeySidebar = ({ nodes, onHotkeyChange }) => {
   const controllers = nodes.filter(n => n.type === 'button' || n.type === 'switch');
   if (controllers.length === 0) return null;
-
   return (
-    <div style={{
-      position: 'fixed', right: '20px', top: '20px', zIndex: 9999,
-      width: '200px', background: '#1a1a1a', padding: '15px',
-      borderRadius: '8px', color: '#fff', border: '2px solid #00ff00',
-      boxShadow: '0 10px 30px rgba(0,0,0,0.8)', fontFamily: 'monospace'
-    }}>
+    <div style={{ position: 'fixed', right: '20px', top: '20px', zIndex: 9999, width: '200px', background: '#1a1a1a', padding: '15px', borderRadius: '8px', color: '#fff', border: '2px solid #00ff00', boxShadow: '0 10px 30px rgba(0,0,0,0.8)', fontFamily: 'monospace' }}>
       <h4 style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#00ff00', textAlign: 'center' }}>⚙️ CONFIG. TECLAS</h4>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {controllers.map((node) => (
           <div key={node.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px' }}>{node.type.toUpperCase()}:</span>
-            <input
-              maxLength={1}
-              value={node.data.hotkey || ''}
-              onChange={(e) => onHotkeyChange(node.id, { hotkey: e.target.value.toLowerCase() })}
-              style={{ width: '30px', background: '#000', border: '1px solid #00ff00', color: '#00ff00', textAlign: 'center', borderRadius: '3px', fontWeight: 'bold' }}
-            />
+            <input maxLength={1} value={node.data.hotkey || ''} onChange={(e) => onHotkeyChange(node.id, { hotkey: e.target.value.toLowerCase() })} style={{ width: '30px', background: '#000', border: '1px solid #00ff00', color: '#00ff00', textAlign: 'center', borderRadius: '3px', fontWeight: 'bold' }} />
           </div>
         ))}
       </div>
@@ -46,27 +37,26 @@ const HotkeySidebar = ({ nodes, onHotkeyChange }) => {
 export default function App() {
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState([]);
-
-  // ESTADO DE VISIBILIDADE: Controla o "Minimizar/Mostrar" da Sidebar
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+
+  // Estados da Capivara (Overlay)
+  const [overlayPos, setOverlayPos] = useState({ x: 500, y: 100 });
+  const [overlaySize, setOverlaySize] = useState(300);
 
   const updateNodeData = useCallback((id, newData) => {
     setNodes((nds) => nds.map((node) => node.id === id ? { ...node, data: { ...node.data, ...newData } } : node));
-  }, []);
-
-  const toggleButton = useCallback((id) => {
-    setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, pressed: !n.data.pressed } } : n));
   }, []);
 
   const setButtonState = useCallback((id, isPressed) => {
     setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, pressed: isPressed } } : n));
   }, []);
 
-  // LÓGICA DE EXCLUSÃO EM LOTE: Deleta tudo que estiver selecionado (azul no canvas)
+  const toggleButton = useCallback((id) => {
+    setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, pressed: !n.data.pressed } } : n));
+  }, []);
+
   const deleteSelectedNodes = useCallback(() => {
     const selectedIds = nodes.filter(n => n.selected).map(n => n.id);
-    if (selectedIds.length === 0) return;
-
     setNodes((nds) => nds.filter((node) => !selectedIds.includes(node.id)));
     setEdges((eds) => eds.filter((edge) => !selectedIds.includes(edge.source) && !selectedIds.includes(edge.target)));
   }, [nodes]);
@@ -76,10 +66,7 @@ export default function App() {
     setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
   }, []);
 
-  const onEdgeClick = useCallback((event, edge) => {
-    setEdges((eds) => eds.filter((e) => e.id !== edge.id));
-  }, []);
-
+  // RESTAURAÇÃO: Lógica completa do menu de contexto para FPGA e componentes
   const onNodeContextMenu = useCallback((event, node) => {
     event.preventDefault();
     const scale = prompt("Escala do componente (ex: 1.0):", node.data.scale || "1.0");
@@ -138,8 +125,21 @@ export default function App() {
     }
   })), [nodes, onDeleteNode, toggleButton, setButtonState, updateNodeData]);
 
+  const handleOverlayDrag = (e) => {
+    e.stopPropagation();
+    const startX = e.clientX - overlayPos.x;
+    const startY = e.clientY - overlayPos.y;
+    const onMove = (me) => setOverlayPos({ x: me.clientX - startX, y: me.clientY - startY });
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
+
   return (
-    <div className="app" style={{ width: '100vw', height: '100vh', background: '#0a0a0a', '--bg-size': '1250px' }}>
+    <div className="app" style={{ width: '100vw', height: '100vh', background: '#0a0a0a' }}>
       <Toolbar
         addNode={addNode}
         deleteSelectedNodes={deleteSelectedNodes}
@@ -148,33 +148,48 @@ export default function App() {
         clearBoard={() => { if (window.confirm("Limpar placa?")) { setNodes([]); setEdges([]); } }}
       />
 
-      {/* RENDERIZAÇÃO CONDICIONAL: A Sidebar só aparece se o estado for verdadeiro */}
-      {isSidebarVisible && (
-        <HotkeySidebar nodes={nodes} onHotkeyChange={(id, data) => updateNodeData(id, data)} />
-      )}
+      {isSidebarVisible && <HotkeySidebar nodes={nodes} onHotkeyChange={updateNodeData} />}
 
       <ReactFlow
         nodes={nodesWithLogic}
         edges={edges}
         onNodesChange={(c) => setNodes((nds) => applyNodeChanges(c, nds))}
         onEdgesChange={(c) => setEdges((eds) => applyEdgeChanges(c, eds))}
-        onConnect={(p) => setEdges((eds) => addEdge(p, eds))}
-        onEdgeClick={onEdgeClick}
-        onNodeContextMenu={onNodeContextMenu}
-        onNodesDelete={deleteSelectedNodes} // Permite usar a tecla 'Delete' do teclado
+        onConnect={(p) => setEdges((eds) => addEdge({ ...p, type: 'step' }, eds))}
         nodeTypes={nodeTypes}
-        defaultEdgeOptions={{ 
-    type: 'step', // 'step' cria as quinas vivas de 90 graus
-    style: { 
-      strokeWidth: 2, 
-      stroke: '#b0b0b0' // Cor de fio estanhado
-    } 
-  }}
-  onConnect={(params) => setEdges((eds) => addEdge({ ...params, type: 'step' }, eds))}
+        onNodeContextMenu={onNodeContextMenu}
+        minZoom={0.1}
+        maxZoom={2.0}
         fitView
       >
         <Background color="#1a1a1a" gap={20} />
         <Controls />
+
+        {/* --- OVERLAY DA CAPIVARA --- */}
+        <Panel position="top-left" style={{ pointerEvents: 'none' }}>
+          <div 
+            onMouseDown={handleOverlayDrag}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const newSize = prompt("Largura da capivara (px):", overlaySize);
+              if (newSize) setOverlaySize(parseInt(newSize));
+            }}
+            style={{
+              position: 'absolute',
+              transform: `translate(${overlayPos.x}px, ${overlayPos.y}px)`,
+              cursor: 'grab',
+              zIndex: 9999,
+              pointerEvents: 'all'
+            }}
+          >
+            <img 
+              src={overlayImage} 
+              alt="Capybara" 
+              style={{ width: `${overlaySize}px`, opacity: 0.9, userSelect: 'none', pointerEvents: 'none' }} 
+            />
+          </div>
+        </Panel>
       </ReactFlow>
     </div>
   );
