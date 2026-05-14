@@ -12,7 +12,9 @@ import { RGBLEDNode } from '../nodes/RGBLEDNode';
 import { SwitchNode } from '../nodes/SwitchNode';
 import { ConstantNode } from '../nodes/ConstantNode';
 import { FPGANode } from '../nodes/FPGANode';
+import { ClockNode } from '../nodes/ClockNode';
 import { DisplayNode } from '../nodes/DisplayNode';
+
 
 /**
  * REGISTRO DE TIPOS (nodeTypes):
@@ -28,6 +30,7 @@ export const nodeTypes = {
     rgb_led: RGBLEDNode,
     constant: ConstantNode,
     display: DisplayNode,
+    clock: ClockNode,
     fpga: FPGANode // Integração do Core de Lógica Programável
 };
 
