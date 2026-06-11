@@ -1,10 +1,10 @@
 ﻿/**
  * ARQUIVO: App.jsx
- * CORREÇÃO: Restauração da lógica da FPGA + Overlay Móvel
+ * 
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import ReactFlow, { Background, Controls, Panel, addEdge, applyEdgeChanges, applyNodeChanges } from 'reactflow';
+import ReactFlow, { Background, Controls, addEdge, applyEdgeChanges, applyNodeChanges } from 'reactflow';
 import 'reactflow/dist/style.css';
 import './App.css';
 
@@ -13,35 +13,115 @@ import { useCircuit } from './hooks/useCircuit';
 import { useKeyboard } from './hooks/useKeyboard';
 import { Toolbar } from './components/Toolbar';
 
-import overlayImage from './assets/Capivara.jpeg';
+// --- NOVA ABA DE PROPRIEDADES (INSPECTOR) ---
+const PropertiesSidebar = ({ selectedNode, updateNodeData }) => {
+  const sidebarStyle = {
+    width: '250px',
+    background: '#0f0f0f',
+    borderLeft: '1px solid #333',
+    padding: '20px',
+    color: '#fff',
+    fontFamily: 'sans-serif',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '15px',
+    flexShrink: 0,
+    overflowY: 'auto'
+  };
 
-// --- SIDEBAR DE TECLAS ---
-const HotkeySidebar = ({ nodes, onHotkeyChange }) => {
-  const controllers = nodes.filter(n => n.type === 'button' || n.type === 'switch');
-  if (controllers.length === 0) return null;
-  return (
-    <div style={{ position: 'fixed', right: '20px', top: '20px', zIndex: 9999, width: '200px', background: '#1a1a1a', padding: '15px', borderRadius: '8px', color: '#fff', border: '2px solid #00ff00', boxShadow: '0 10px 30px rgba(0,0,0,0.8)', fontFamily: 'monospace' }}>
-      <h4 style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#00ff00', textAlign: 'center' }}>⚙️ CONFIG. TECLAS</h4>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {controllers.map((node) => (
-          <div key={node.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px' }}>{node.type.toUpperCase()}:</span>
-            <input maxLength={1} value={node.data.hotkey || ''} onChange={(e) => onHotkeyChange(node.id, { hotkey: e.target.value.toLowerCase() })} style={{ width: '30px', background: '#000', border: '1px solid #00ff00', color: '#00ff00', textAlign: 'center', borderRadius: '3px', fontWeight: 'bold' }} />
-          </div>
-        ))}
+  const labelStyle = { display: 'flex', flexDirection: 'column', fontSize: '12px', color: '#aaa', gap: '5px' };
+  const inputStyle = { background: '#1a1a1a', border: '1px solid #444', color: '#00ff00', padding: '8px', borderRadius: '4px', fontFamily: 'monospace', outline: 'none' };
+
+  if (!selectedNode) {
+    return (
+      <div style={sidebarStyle}>
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#fff', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
+          ⚙️ Propriedades
+        </h3>
+        <p style={{ fontSize: '12px', color: '#555', textAlign: 'center', marginTop: '40px' }}>
+          Selecione um componente no circuito para editar suas configurações.
+        </p>
       </div>
+    );
+  }
+
+  const { id, type, data } = selectedNode;
+
+  // Função auxiliar para atualizar dados facilmente
+  const handleChange = (key, value) => {
+    updateNodeData(id, { [key]: value });
+  };
+
+  return (
+    <div style={sidebarStyle}>
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#00ff00', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
+        ⚙️ Propriedades do Nó
+      </h3>
+      
+      {/* INFO COMUM A TODOS OS NÓS */}
+      <div style={{ fontSize: '11px', color: '#666', marginBottom: '10px' }}>
+        <div><strong>TIPO:</strong> {type.toUpperCase()}</div>
+        <div><strong>ID:</strong> {id.split('-')[1]}</div>
+      </div>
+
+      {/* CAMPO DE ESCALA (Para todos os nós) */}
+      <label style={labelStyle}>
+        Tamanho (Escala):
+        <input 
+          type="number" step="0.1" min="0.5" max="3"
+          value={data.scale || 1} 
+          onChange={(e) => handleChange('scale', parseFloat(e.target.value) || 1)} 
+          style={inputStyle}
+        />
+      </label>
+
+      {/* PROPRIEDADES ESPECÍFICAS DA FPGA */}
+      {type === 'fpga' && (
+        <>
+          <label style={labelStyle}>
+            Label do Chip:
+            <input type="text" value={data.label || ''} onChange={(e) => handleChange('label', e.target.value)} style={inputStyle} />
+          </label>
+          <label style={labelStyle}>Entradas (Esquerda): <input type="number" min="0" value={data.inputs_left || 0} onChange={(e) => handleChange('inputs_left', parseInt(e.target.value) || 0)} style={inputStyle} /></label>
+          <label style={labelStyle}>Entradas (Topo): <input type="number" min="0" value={data.inputs_top || 0} onChange={(e) => handleChange('inputs_top', parseInt(e.target.value) || 0)} style={inputStyle} /></label>
+          <label style={labelStyle}>Saídas (Direita): <input type="number" min="0" value={data.outputs_right || 0} onChange={(e) => handleChange('outputs_right', parseInt(e.target.value) || 0)} style={inputStyle} /></label>
+          <label style={labelStyle}>Saídas (Base): <input type="number" min="0" value={data.outputs_bottom || 0} onChange={(e) => handleChange('outputs_bottom', parseInt(e.target.value) || 0)} style={inputStyle} /></label>
+        </>
+      )}
+
+      {/* PROPRIEDADES ESPECÍFICAS DE CONTROLES (Button/Switch) */}
+      {['button', 'switch'].includes(type) && (
+        <label style={labelStyle}>
+          Tecla de Atalho:
+          <input 
+            type="text" maxLength={1} 
+            value={data.hotkey || ''} 
+            onChange={(e) => handleChange('hotkey', e.target.value.toLowerCase())} 
+            style={{ ...inputStyle, textAlign: 'center', fontSize: '18px' }} 
+          />
+        </label>
+      )}
+
+      {/* PROPRIEDADES DE SINAL CONSTANTE (Data Bus) */}
+      {type === 'constant' && (
+        <label style={labelStyle}>
+          Valor de Saída:
+          <input 
+            type="number" 
+            value={data.value || 0} 
+            onChange={(e) => handleChange('value', parseInt(e.target.value) || 0)} 
+            style={inputStyle} 
+          />
+        </label>
+      )}
     </div>
   );
 };
 
+
 export default function App() {
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState([]);
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-
-  // Estados da Capivara (Overlay)
-  const [overlayPos, setOverlayPos] = useState({ x: 500, y: 100 });
-  const [overlaySize, setOverlaySize] = useState(300);
 
   const updateNodeData = useCallback((id, newData) => {
     setNodes((nds) => nds.map((node) => node.id === id ? { ...node, data: { ...node.data, ...newData } } : node));
@@ -66,32 +146,7 @@ export default function App() {
     setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
   }, []);
 
-  // RESTAURAÇÃO: Lógica completa do menu de contexto para FPGA e componentes
-  const onNodeContextMenu = useCallback((event, node) => {
-    event.preventDefault();
-    const scale = prompt("Escala do componente (ex: 1.0):", node.data.scale || "1.0");
-    if (scale !== null) updateNodeData(node.id, { scale: parseFloat(scale) || 1.0 });
-
-    if (['button', 'switch', 'constant', 'fpga'].includes(node.type)) {
-      if (node.type === 'fpga') {
-        const label = prompt("Label do Chip:", node.data.label || "FPGA");
-        if (label !== null) updateNodeData(node.id, { label });
-        const left = prompt("Entradas (Lado Esquerdo):", node.data.inputs_left || "1");
-        if (left !== null) updateNodeData(node.id, { inputs_left: parseInt(left) || 0 });
-        const top = prompt("Entradas (Lado Superior):", node.data.inputs_top || "0");
-        if (top !== null) updateNodeData(node.id, { inputs_top: parseInt(top) || 0 });
-        const right = prompt("Saídas (Lado Direito):", node.data.outputs_right || "1");
-        if (right !== null) updateNodeData(node.id, { outputs_right: parseInt(right) || 0 });
-        const bottom = prompt("Saídas (Lado Inferior):", node.data.outputs_bottom || "0");
-        if (bottom !== null) updateNodeData(node.id, { outputs_bottom: parseInt(bottom) || 0 });
-      } else {
-        const key = node.type !== 'constant' ? prompt("Tecla de atalho:", node.data.hotkey || "") : null;
-        if (key !== null) updateNodeData(node.id, { hotkey: key.toLowerCase().charAt(0) });
-        const val = prompt("Valor de Saída (0-9):", node.data.value || "0");
-        if (val !== null) updateNodeData(node.id, { value: parseInt(val) || 0 });
-      }
-    }
-  }, [updateNodeData]);
+  // O onNodeContextMenu FOI COMPLETAMENTE REMOVIDO DAQUI! 🎉
 
   useCircuit(nodes, edges, setNodes);
   useKeyboard(nodes, setButtonState, toggleButton);
@@ -99,7 +154,7 @@ export default function App() {
   const addNode = (type, color) => {
     const id = `${type}-${Date.now()}`;
     const newNode = {
-      id, type, position: { x: 400, y: 200 },
+      id, type, position: { x: 300, y: 200 },
       data: {
         color, pressed: false, hotkey: '', scale: 1,
         value: type === 'constant' ? 0 : 1,
@@ -125,72 +180,39 @@ export default function App() {
     }
   })), [nodes, onDeleteNode, toggleButton, setButtonState, updateNodeData]);
 
-  const handleOverlayDrag = (e) => {
-    e.stopPropagation();
-    const startX = e.clientX - overlayPos.x;
-    const startY = e.clientY - overlayPos.y;
-    const onMove = (me) => setOverlayPos({ x: me.clientX - startX, y: me.clientY - startY });
-    const onUp = () => {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-    };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  };
+  // Identifica dinamicamente o nó que o usuário clicou (selected: true)
+  const selectedNode = useMemo(() => nodes.find(n => n.selected), [nodes]);
 
   return (
-    <div className="app" style={{ width: '100vw', height: '100vh', background: '#0a0a0a' }}>
+    <div className="app" style={{ display: 'flex', width: '100vw', height: '100vh', background: '#0a0a0a', overflow: 'hidden' }}>
+      
+      {/* BARRA LATERAL FIXA DE PERIFÉRICOS (ESQUERDA) */}
       <Toolbar
         addNode={addNode}
-        deleteSelectedNodes={deleteSelectedNodes}
-        isSidebarVisible={isSidebarVisible}
-        toggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
         clearBoard={() => { if (window.confirm("Limpar placa?")) { setNodes([]); setEdges([]); } }}
       />
 
-      {isSidebarVisible && <HotkeySidebar nodes={nodes} onHotkeyChange={updateNodeData} />}
+      {/* ÁREA CENTRAL DO CIRCUITO */}
+      <div style={{ flex: 1, position: 'relative' }}>
+        <ReactFlow
+          nodes={nodesWithLogic}
+          edges={edges}
+          onNodesChange={(c) => setNodes((nds) => applyNodeChanges(c, nds))}
+          onEdgesChange={(c) => setEdges((eds) => applyEdgeChanges(c, eds))}
+          onConnect={(p) => setEdges((eds) => addEdge({ ...p, type: 'step' }, eds))}
+          nodeTypes={nodeTypes}
+          minZoom={0.1}
+          maxZoom={2.0}
+          fitView
+        >
+          <Background color="#1a1a1a" gap={20} />
+          <Controls />
+        </ReactFlow>
+      </div>
 
-      <ReactFlow
-        nodes={nodesWithLogic}
-        edges={edges}
-        onNodesChange={(c) => setNodes((nds) => applyNodeChanges(c, nds))}
-        onEdgesChange={(c) => setEdges((eds) => applyEdgeChanges(c, eds))}
-        onConnect={(p) => setEdges((eds) => addEdge({ ...p, type: 'step' }, eds))}
-        nodeTypes={nodeTypes}
-        onNodeContextMenu={onNodeContextMenu}
-        minZoom={0.1}
-        maxZoom={2.0}
-        fitView
-      >
-        <Background color="#1a1a1a" gap={20} />
-        <Controls />
+      {/* NOVA ABA DE PROPRIEDADES (DIREITA) */}
+      <PropertiesSidebar selectedNode={selectedNode} updateNodeData={updateNodeData} />
 
-        {/* --- OVERLAY DA CAPIVARA --- */}
-        <Panel position="top-left" style={{ pointerEvents: 'none' }}>
-          <div 
-            onMouseDown={handleOverlayDrag}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const newSize = prompt("Largura da capivara (px):", overlaySize);
-              if (newSize) setOverlaySize(parseInt(newSize));
-            }}
-            style={{
-              position: 'absolute',
-              transform: `translate(${overlayPos.x}px, ${overlayPos.y}px)`,
-              cursor: 'grab',
-              zIndex: 9999,
-              pointerEvents: 'all'
-            }}
-          >
-            <img 
-              src={overlayImage} 
-              alt="Capybara" 
-              style={{ width: `${overlaySize}px`, opacity: 0.9, userSelect: 'none', pointerEvents: 'none' }} 
-            />
-          </div>
-        </Panel>
-      </ReactFlow>
     </div>
   );
 }
