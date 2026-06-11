@@ -1,6 +1,6 @@
 ﻿/**
  * ARQUIVO: App.jsx
- * 
+ * ATUALIZAÇÃO: Aba de propriedades agora é retrátil e possui botão de apagar componente.
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -14,30 +14,52 @@ import { useKeyboard } from './hooks/useKeyboard';
 import { Toolbar } from './components/Toolbar';
 
 // --- NOVA ABA DE PROPRIEDADES (INSPECTOR) ---
-const PropertiesSidebar = ({ selectedNode, updateNodeData }) => {
+const PropertiesSidebar = ({ selectedNode, updateNodeData, onDeleteNode }) => {
+  // Estado para controlar a expansão da aba
+  const [isExpanded, setIsExpanded] = useState(true);
+
   const sidebarStyle = {
-    width: '250px',
+    width: isExpanded ? '250px' : '40px',
     background: '#0f0f0f',
     borderLeft: '1px solid #333',
-    padding: '20px',
+    padding: isExpanded ? '20px' : '15px 5px',
     color: '#fff',
     fontFamily: 'sans-serif',
     display: 'flex',
     flexDirection: 'column',
     gap: '15px',
     flexShrink: 0,
-    overflowY: 'auto'
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    transition: 'width 0.2s ease-in-out, padding 0.2s ease-in-out' // Animação suave
   };
 
-  const labelStyle = { display: 'flex', flexDirection: 'column', fontSize: '12px', color: '#aaa', gap: '5px' };
+  const labelStyle = { display: 'flex', flexDirection: 'column', fontSize: '12px', color: '#aaa', gap: '5px', whiteSpace: 'nowrap' };
   const inputStyle = { background: '#1a1a1a', border: '1px solid #444', color: '#00ff00', padding: '8px', borderRadius: '4px', fontFamily: 'monospace', outline: 'none' };
 
+  // 1. Visão Minimizada
+  if (!isExpanded) {
+    return (
+      <div style={sidebarStyle}>
+        <button 
+          onClick={() => setIsExpanded(true)} 
+          style={{ background: 'transparent', border: 'none', color: '#00ff00', cursor: 'pointer', fontSize: '18px', textAlign: 'center', width: '100%' }}
+          title="Expandir Propriedades"
+        >
+          ◀
+        </button>
+      </div>
+    );
+  }
+
+  // 2. Visão Expandida, mas nenhum nó selecionado
   if (!selectedNode) {
     return (
       <div style={sidebarStyle}>
-        <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#fff', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-          ⚙️ Propriedades
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
+          <h3 style={{ margin: 0, fontSize: '14px', color: '#fff', whiteSpace: 'nowrap' }}>⚙️ Propriedades</h3>
+          <button onClick={() => setIsExpanded(false)} style={{ background: 'none', border: 'none', color: '#777', cursor: 'pointer', fontSize: '16px' }}>▶</button>
+        </div>
         <p style={{ fontSize: '12px', color: '#555', textAlign: 'center', marginTop: '40px' }}>
           Selecione um componente no circuito para editar suas configurações.
         </p>
@@ -52,11 +74,15 @@ const PropertiesSidebar = ({ selectedNode, updateNodeData }) => {
     updateNodeData(id, { [key]: value });
   };
 
+  // 3. Visão Expandida com nó selecionado
   return (
     <div style={sidebarStyle}>
-      <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#00ff00', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-        ⚙️ Propriedades do Nó
-      </h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
+        <h3 style={{ margin: 0, fontSize: '14px', color: '#00ff00', whiteSpace: 'nowrap' }}>⚙️ Propriedades do Nó</h3>
+        <button onClick={() => setIsExpanded(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '16px' }} title="Minimizar">
+          ▶
+        </button>
+      </div>
       
       {/* INFO COMUM A TODOS OS NÓS */}
       <div style={{ fontSize: '11px', color: '#666', marginBottom: '10px' }}>
@@ -114,6 +140,28 @@ const PropertiesSidebar = ({ selectedNode, updateNodeData }) => {
           />
         </label>
       )}
+
+      {/* BOTÃO DE APAGAR NÓ (Empurrado para baixo) */}
+      <button 
+        onClick={() => onDeleteNode(id)}
+        style={{
+          marginTop: 'auto', 
+          background: 'rgba(255, 0, 0, 0.1)',
+          color: '#ff4444',
+          border: '1px solid #ff4444',
+          padding: '10px',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          transition: 'background 0.2s',
+          whiteSpace: 'nowrap'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 0, 0, 0.3)'}
+        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 0, 0, 0.1)'}
+      >
+        🗑️ Apagar Componente
+      </button>
+
     </div>
   );
 };
@@ -123,6 +171,7 @@ export default function App() {
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState([]);
 
+  // Retirando o HotkeySidebar por enquanto, já que essas configs agora estão na barra da direita
   const updateNodeData = useCallback((id, newData) => {
     setNodes((nds) => nds.map((node) => node.id === id ? { ...node, data: { ...node.data, ...newData } } : node));
   }, []);
@@ -145,8 +194,6 @@ export default function App() {
     setNodes((nds) => nds.filter((n) => n.id !== id));
     setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
   }, []);
-
-  // O onNodeContextMenu FOI COMPLETAMENTE REMOVIDO DAQUI! 🎉
 
   useCircuit(nodes, edges, setNodes);
   useKeyboard(nodes, setButtonState, toggleButton);
@@ -211,7 +258,11 @@ export default function App() {
       </div>
 
       {/* NOVA ABA DE PROPRIEDADES (DIREITA) */}
-      <PropertiesSidebar selectedNode={selectedNode} updateNodeData={updateNodeData} />
+      <PropertiesSidebar 
+        selectedNode={selectedNode} 
+        updateNodeData={updateNodeData} 
+        onDeleteNode={onDeleteNode} 
+      />
 
     </div>
   );
