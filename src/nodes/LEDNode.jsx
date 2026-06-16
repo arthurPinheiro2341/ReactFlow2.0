@@ -1,39 +1,88 @@
 /**
  * ARQUIVO: LEDNode.jsx
  * CAMADA: Component Layer / Output Actuator
- * DESCRIÇÃO: Simulação de indicador LED com física óptica e gradiente de epóxi.
+ * ATUALIZAÇÃO: NodeResizer implementado. Lente, anel e haste 
+ * dimensionados em porcentagem para escalarem juntos perfeitamente.
  */
 
-import React from 'react';
-import { Handle, Position } from 'reactflow';
+import React, { useEffect } from 'react';
+import { Handle, Position, NodeResizer, useUpdateNodeInternals } from 'reactflow';
 
-export const LEDNode = ({ data }) => {
-  const { scale = 1, color = '#ffeb3b', active } = data;
+export const LEDNode = ({ id, data, selected }) => {
+  const { color = '#ffeb3b', active } = data;
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  useEffect(() => {
+    // Sincroniza a conexão (fio) caso o LED estique/encolha
+    const timer = setTimeout(() => updateNodeInternals(id), 10);
+    return () => clearTimeout(timer);
+  }, [id, updateNodeInternals]);
+
+  const resizerHandleStyle = {
+    width: '12px', height: '12px', background: '#00ff00',
+    border: '2px solid #ffffff', borderRadius: '50%', zIndex: 100
+  };
 
   return (
-    <div style={{ 
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      transform: `scale(${scale})`, transformOrigin: 'top left'
-    }}>
-      <div style={{
-          width: '34px', height: '34px', borderRadius: '50% 50% 10% 10%', 
-          background: active 
-            ? `radial-gradient(circle at 30% 30%, #fff, ${color} 40%, #000)` 
-            : `radial-gradient(circle at 30% 30%, #555, #111)`,
-          border: '1px solid rgba(255,255,255,0.2)',
-          boxShadow: active 
-            ? `0 0 25px 5px ${color}, inset 0 -5px 10px rgba(0,0,0,0.5)` 
-            : 'inset 0 -5px 10px rgba(0,0,0,0.7)',
-          zIndex: 2
-        }}
+    <>
+      <NodeResizer 
+        color="#00ff00" 
+        isVisible={selected} 
+        minWidth={20} 
+        minHeight={40}
+        handleStyle={resizerHandleStyle} 
       />
-      <div style={{ width: '38px', height: '4px', background: '#333', borderRadius: '1px', marginTop: '-2px', zIndex: 1 }} />
-      <div style={legStyle}>
-        <Handle type="target" position={Position.Bottom} id="in" style={handleStyle} />
+      
+      <div style={{ 
+        width: '100%', height: '100%',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        position: 'relative'
+      }}>
+        
+        {/* LENTE DE EPÓXI (Bulb) */}
+        <div style={{
+            width: '85%', height: '55%', 
+            borderRadius: '50% 50% 10% 10%', 
+            background: active 
+              ? `radial-gradient(circle at 30% 30%, #fff, ${color} 40%, #000)` 
+              : `radial-gradient(circle at 30% 30%, #555, #111)`,
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: active 
+              ? `0 0 25px 5px ${color}, inset 0 -5px 10px rgba(0,0,0,0.5)` 
+              : 'inset 0 -5px 10px rgba(0,0,0,0.7)',
+            zIndex: 2
+          }}
+        />
+        
+        {/* ANEL DA BASE DO LED (Rim) */}
+        <div style={{ 
+            width: '100%', height: '8%', 
+            background: '#333', borderRadius: '2px', 
+            marginTop: '-2%', zIndex: 1 
+          }} 
+        />
+        
+        {/* PERNA METÁLICA (Leg) */}
+        <div style={{ 
+            width: '12%', height: '37%', 
+            background: '#a0a0a0', position: 'relative', 
+            marginTop: '-2%', zIndex: 0, 
+            display: 'flex', justifyContent: 'center', 
+            boxShadow: '2px 2px 4px rgba(0,0,0,0.3)' 
+          }}
+        >
+          <Handle 
+            type="target" 
+            position={Position.Bottom} 
+            id="in" 
+            style={{ 
+              bottom: '-4px', background: '#777', 
+              width: '10px', height: '10px', border: '2px solid #1a1a1a' 
+            }} 
+          />
+        </div>
+
       </div>
-    </div>
+    </>
   );
 };
-
-const legStyle = { width: '4px', height: '30px', background: '#a0a0a0', position: 'relative', marginTop: '-2px', zIndex: 0, display: 'flex', justifyContent: 'center', boxShadow: '2px 2px 4px rgba(0,0,0,0.3)' };
-const handleStyle = { bottom: '-4px', background: '#777', width: '10px', height: '10px', border: '2px solid #1a1a1a' };

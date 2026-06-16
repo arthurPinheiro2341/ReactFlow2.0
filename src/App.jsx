@@ -1,6 +1,6 @@
 ﻿/**
  * ARQUIVO: App.jsx
- * ATUALIZAÇÃO: Aba de propriedades agora é retrátil e possui botão de apagar componente.
+ * ATUALIZAÇÃO: Adicionada a funcionalidade de apagar um fio (edge) clicando diretamente nele.
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -13,9 +13,8 @@ import { useCircuit } from './hooks/useCircuit';
 import { useKeyboard } from './hooks/useKeyboard';
 import { Toolbar } from './components/Toolbar';
 
-// --- NOVA ABA DE PROPRIEDADES (INSPECTOR) ---
+// --- ABA DE PROPRIEDADES (INSPECTOR) ---
 const PropertiesSidebar = ({ selectedNode, updateNodeData, onDeleteNode }) => {
-  // Estado para controlar a expansão da aba
   const [isExpanded, setIsExpanded] = useState(true);
 
   const sidebarStyle = {
@@ -31,13 +30,12 @@ const PropertiesSidebar = ({ selectedNode, updateNodeData, onDeleteNode }) => {
     flexShrink: 0,
     overflowY: 'auto',
     overflowX: 'hidden',
-    transition: 'width 0.2s ease-in-out, padding 0.2s ease-in-out' // Animação suave
+    transition: 'width 0.2s ease-in-out, padding 0.2s ease-in-out'
   };
 
   const labelStyle = { display: 'flex', flexDirection: 'column', fontSize: '12px', color: '#aaa', gap: '5px', whiteSpace: 'nowrap' };
   const inputStyle = { background: '#1a1a1a', border: '1px solid #444', color: '#00ff00', padding: '8px', borderRadius: '4px', fontFamily: 'monospace', outline: 'none' };
 
-  // 1. Visão Minimizada
   if (!isExpanded) {
     return (
       <div style={sidebarStyle}>
@@ -52,7 +50,6 @@ const PropertiesSidebar = ({ selectedNode, updateNodeData, onDeleteNode }) => {
     );
   }
 
-  // 2. Visão Expandida, mas nenhum nó selecionado
   if (!selectedNode) {
     return (
       <div style={sidebarStyle}>
@@ -69,12 +66,10 @@ const PropertiesSidebar = ({ selectedNode, updateNodeData, onDeleteNode }) => {
 
   const { id, type, data } = selectedNode;
 
-  // Função auxiliar para atualizar dados facilmente
   const handleChange = (key, value) => {
     updateNodeData(id, { [key]: value });
   };
 
-  // 3. Visão Expandida com nó selecionado
   return (
     <div style={sidebarStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
@@ -84,15 +79,13 @@ const PropertiesSidebar = ({ selectedNode, updateNodeData, onDeleteNode }) => {
         </button>
       </div>
       
-      {/* INFO COMUM A TODOS OS NÓS */}
       <div style={{ fontSize: '11px', color: '#666', marginBottom: '10px' }}>
         <div><strong>TIPO:</strong> {type.toUpperCase()}</div>
         <div><strong>ID:</strong> {id.split('-')[1]}</div>
       </div>
 
-      {/* CAMPO DE ESCALA (Para todos os nós) */}
       <label style={labelStyle}>
-        Tamanho (Escala):
+        Tamanho (Escala Antiga):
         <input 
           type="number" step="0.1" min="0.5" max="3"
           value={data.scale || 1} 
@@ -101,13 +94,9 @@ const PropertiesSidebar = ({ selectedNode, updateNodeData, onDeleteNode }) => {
         />
       </label>
 
-      {/* PROPRIEDADES ESPECÍFICAS DA FPGA */}
       {type === 'fpga' && (
         <>
-          <label style={labelStyle}>
-            Label do Chip:
-            <input type="text" value={data.label || ''} onChange={(e) => handleChange('label', e.target.value)} style={inputStyle} />
-          </label>
+          <label style={labelStyle}>Label do Chip: <input type="text" value={data.label || ''} onChange={(e) => handleChange('label', e.target.value)} style={inputStyle} /></label>
           <label style={labelStyle}>Entradas (Esquerda): <input type="number" min="0" value={data.inputs_left || 0} onChange={(e) => handleChange('inputs_left', parseInt(e.target.value) || 0)} style={inputStyle} /></label>
           <label style={labelStyle}>Entradas (Topo): <input type="number" min="0" value={data.inputs_top || 0} onChange={(e) => handleChange('inputs_top', parseInt(e.target.value) || 0)} style={inputStyle} /></label>
           <label style={labelStyle}>Saídas (Direita): <input type="number" min="0" value={data.outputs_right || 0} onChange={(e) => handleChange('outputs_right', parseInt(e.target.value) || 0)} style={inputStyle} /></label>
@@ -115,7 +104,6 @@ const PropertiesSidebar = ({ selectedNode, updateNodeData, onDeleteNode }) => {
         </>
       )}
 
-      {/* PROPRIEDADES ESPECÍFICAS DE CONTROLES (Button/Switch) */}
       {['button', 'switch'].includes(type) && (
         <label style={labelStyle}>
           Tecla de Atalho:
@@ -128,7 +116,6 @@ const PropertiesSidebar = ({ selectedNode, updateNodeData, onDeleteNode }) => {
         </label>
       )}
 
-      {/* PROPRIEDADES DE SINAL CONSTANTE (Data Bus) */}
       {type === 'constant' && (
         <label style={labelStyle}>
           Valor de Saída:
@@ -141,7 +128,6 @@ const PropertiesSidebar = ({ selectedNode, updateNodeData, onDeleteNode }) => {
         </label>
       )}
 
-      {/* BOTÃO DE APAGAR NÓ (Empurrado para baixo) */}
       <button 
         onClick={() => onDeleteNode(id)}
         style={{
@@ -166,12 +152,10 @@ const PropertiesSidebar = ({ selectedNode, updateNodeData, onDeleteNode }) => {
   );
 };
 
-
 export default function App() {
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState([]);
 
-  // Retirando o HotkeySidebar por enquanto, já que essas configs agora estão na barra da direita
   const updateNodeData = useCallback((id, newData) => {
     setNodes((nds) => nds.map((node) => node.id === id ? { ...node, data: { ...node.data, ...newData } } : node));
   }, []);
@@ -195,13 +179,34 @@ export default function App() {
     setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
   }, []);
 
+  // ======== FUNÇÃO PARA EXCLUIR O FIO CLICADO ========
+  const onEdgeClick = useCallback((event, edge) => {
+    setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+  }, []);
+  // ===================================================
+
   useCircuit(nodes, edges, setNodes);
   useKeyboard(nodes, setButtonState, toggleButton);
 
   const addNode = (type, color) => {
     const id = `${type}-${Date.now()}`;
+    
+    let defaultStyle = { width: 60, height: 60 }; 
+    
+    if (type === 'fpga') defaultStyle = { width: 350, height: 350 };
+    else if (type === 'clock') defaultStyle = { width: 150, height: 60 };
+    else if (type === 'constant') defaultStyle = { width: 90, height: 80 };
+    else if (type === 'display') defaultStyle = { width: 800, height: 500 };
+    else if (type === 'digit') defaultStyle = { width: 60, height: 90 };
+    else if (type === 'led') defaultStyle = { width: 50, height: 75 };
+    else if (type === 'rgb_led') defaultStyle = { width: 50, height: 75 };
+    else if (type === 'switch') defaultStyle = { width: 50, height: 65 };
+
     const newNode = {
-      id, type, position: { x: 300, y: 200 },
+      id, 
+      type, 
+      position: { x: 300, y: 200 },
+      style: defaultStyle, 
       data: {
         color, pressed: false, hotkey: '', scale: 1,
         value: type === 'constant' ? 0 : 1,
@@ -227,19 +232,16 @@ export default function App() {
     }
   })), [nodes, onDeleteNode, toggleButton, setButtonState, updateNodeData]);
 
-  // Identifica dinamicamente o nó que o usuário clicou (selected: true)
   const selectedNode = useMemo(() => nodes.find(n => n.selected), [nodes]);
 
   return (
     <div className="app" style={{ display: 'flex', width: '100vw', height: '100vh', background: '#0a0a0a', overflow: 'hidden' }}>
       
-      {/* BARRA LATERAL FIXA DE PERIFÉRICOS (ESQUERDA) */}
       <Toolbar
         addNode={addNode}
         clearBoard={() => { if (window.confirm("Limpar placa?")) { setNodes([]); setEdges([]); } }}
       />
 
-      {/* ÁREA CENTRAL DO CIRCUITO */}
       <div style={{ flex: 1, position: 'relative' }}>
         <ReactFlow
           nodes={nodesWithLogic}
@@ -247,6 +249,7 @@ export default function App() {
           onNodesChange={(c) => setNodes((nds) => applyNodeChanges(c, nds))}
           onEdgesChange={(c) => setEdges((eds) => applyEdgeChanges(c, eds))}
           onConnect={(p) => setEdges((eds) => addEdge({ ...p, type: 'step' }, eds))}
+          onEdgeClick={onEdgeClick} // <--- INTERCEPTA O CLIQUE NO FIO AQUI
           nodeTypes={nodeTypes}
           minZoom={0.1}
           maxZoom={2.0}
@@ -257,7 +260,6 @@ export default function App() {
         </ReactFlow>
       </div>
 
-      {/* NOVA ABA DE PROPRIEDADES (DIREITA) */}
       <PropertiesSidebar 
         selectedNode={selectedNode} 
         updateNodeData={updateNodeData} 

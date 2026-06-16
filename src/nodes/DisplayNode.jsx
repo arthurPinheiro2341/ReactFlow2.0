@@ -1,34 +1,28 @@
 /**
  * ARQUIVO: DisplayNode.jsx
  * CAMADA: Advanced Output Actuator / Visual Interface
+ * ATUALIZAÇÃO: NodeResizer adicionado. Pinos e textos convertidos para 
+ * posicionamento em porcentagem (%), permitindo redimensionamento fluido.
  */
 
-import React, { useEffect } from 'react'; // Adicionado useEffect
-import { Handle, Position, useUpdateNodeInternals } from 'reactflow'; // Adicionado useUpdateNodeInternals
+import React, { useEffect } from 'react'; 
+import { Handle, Position, useUpdateNodeInternals, NodeResizer } from 'reactflow'; 
 
-export const DisplayNode = ({ id, data }) => { // Recebe 'id' como prop agora
-  const { scale = 1 } = data;
-
-  /**
-   * 1. MOTOR DE ATUALIZAÇÃO INTERNA:
-   * Força o React Flow a medir novamente a posição dos handles.
-   */
+export const DisplayNode = ({ id, data, selected }) => { 
   const updateNodeInternals = useUpdateNodeInternals();
 
-  /**
-   * 2. SINCRONIZAÇÃO DE ESCALA:
-   * O delay de 10ms garante que o CSS seja aplicado antes da medição.
-   */
   useEffect(() => {
     const timer = setTimeout(() => {
       updateNodeInternals(id);
     }, 10);
     return () => clearTimeout(timer);
-  }, [id, scale, updateNodeInternals]);
+  }, [id, updateNodeInternals]);
 
-  // Parâmetros Técnicos de Layout
-  const componentHeight = 420;
-  const componentWidth = 600;
+  const resizerHandleStyle = {
+    width: '12px', height: '12px', background: '#00ff00',
+    border: '2px solid #ffffff', borderRadius: '50%', zIndex: 100
+  };
+
   const sidebarWidth = 65;
   const handleSize = 8;
   const handleOffset = -4;
@@ -49,20 +43,22 @@ export const DisplayNode = ({ id, data }) => { // Recebe 'id' como prop agora
     fontFamily: 'monospace',
     userSelect: 'none',
     left: '12px',
+    transform: 'translateY(-50%)' // Garante que o texto alinhe perfeitamente com o pino
   };
 
-  const renderColorBus = (prefix, color, textLabel, startY) => {
+  // Função redesenhada para aceitar porcentagem no eixo Y
+  const renderColorBus = (prefix, color, textLabel, startYPercent) => {
     const textElement = (
-      <div key={`${prefix}-label`} style={{ ...baseTextStyle, color: color, top: `${startY}px`, }}>
+      <div key={`${prefix}-label`} style={{ ...baseTextStyle, color: color, top: `${startYPercent}%` }}>
         {textLabel}
       </div>
     );
 
-    const handlesStartTop = startY + 15;
-    const handleVerticalPitch = 12;
+    const pitchPercent = 2.85; // Espaçamento entre os pinos em porcentagem
+    const handlesStartTop = startYPercent + 3.5; // Distância do título para o primeiro pino
 
     const handles = [...Array(8)].map((_, i) => {
-      const currentTop = handlesStartTop + (i * handleVerticalPitch);
+      const currentTop = handlesStartTop + (i * pitchPercent);
       return (
         <Handle
           key={`${prefix}${i}`}
@@ -72,7 +68,7 @@ export const DisplayNode = ({ id, data }) => { // Recebe 'id' como prop agora
           style={{
             ...handleStyleBase,
             background: color,
-            top: `${currentTop}px`
+            top: `${currentTop}%`
           }}
         />
       );
@@ -81,54 +77,57 @@ export const DisplayNode = ({ id, data }) => { // Recebe 'id' como prop agora
     return [textElement, ...handles];
   };
 
-  const vSyncY = 15;
-  const hSyncY = 40;
-  const redBusStartY = 75;
-  const greenBusStartY = 190;
-  const blueBusStartY = 305;
-
   return (
-    <div style={{
-      width: `${componentWidth}px`,
-      height: `${componentHeight}px`,
-      background: '#1a1a1a',
-      border: '1px solid #333',
-      borderRadius: '8px',
-      position: 'relative',
-      boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-      transform: `scale(${scale})`,
-      transformOrigin: 'top left',
-      display: 'flex', 
-      flexDirection: 'column',
-      overflow: 'hidden' 
-    }}>
-      
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'row', position: 'relative'}}>
-        <div style={{ width: `${sidebarWidth}px`, height: '100%', background: 'rgba(255,255,255,0.015)', borderRight: '1px solid #222' }}/>
+    <>
+      <NodeResizer 
+        color="#00ff00" 
+        isVisible={selected} 
+        minWidth={300} 
+        minHeight={300}
+        handleStyle={resizerHandleStyle} 
+      />
 
-        <div style={{ flex: 1, background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            <div style={{ color: '#333', fontFamily: 'monospace', fontSize: '12px', textAlign: 'center', padding: '20px' }}>
-                NO SIGNAL (24-BIT RGB)
-                <br/>
-                [PROPORÇÃO VGA PAISAGEM]
-            </div>
+      <div style={{
+        width: '100%',
+        height: '100%',
+        background: '#1a1a1a',
+        border: '1px solid #333',
+        borderRadius: '8px',
+        position: 'relative',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+        display: 'flex', 
+        flexDirection: 'column',
+        overflow: 'hidden' 
+      }}>
+        
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'row', position: 'relative'}}>
+          <div style={{ width: `${sidebarWidth}px`, height: '100%', background: 'rgba(255,255,255,0.015)', borderRight: '1px solid #222' }}/>
+
+          <div style={{ flex: 1, background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              <div style={{ color: '#333', fontFamily: 'monospace', fontSize: 'clamp(10px, 2vw, 24px)', textAlign: 'center', padding: '20px' }}>
+                  NO SIGNAL (24-BIT RGB)
+                  <br/>
+                  [PROPORÇÃO VGA PAISAGEM]
+              </div>
+          </div>
+
+          <Handle type="target" position={Position.Left} id="vsync" style={{ ...handleStyleBase, top: `4%`, background: '#fff' }} />
+          <div style={{ ...baseTextStyle, color: '#fff', top: `4%` }}>VSYNC</div>
+
+          <Handle type="target" position={Position.Left} id="hsync" style={{ ...handleStyleBase, top: `10%`, background: '#fff' }} />
+          <div style={{ ...baseTextStyle, color: '#fff', top: `10%` }}>HSYNC</div>
+
+          {/* O último parâmetro é a posição Y em porcentagem */}
+          {renderColorBus('r', '#ff4444', 'R[0..7]', 16)}
+          {renderColorBus('g', '#44ff44', 'G[0..7]', 44)}
+          {renderColorBus('b', '#4444ff', 'B[0..7]', 72)}
         </div>
 
-        <Handle type="target" position={Position.Left} id="vsync" style={{ ...handleStyleBase, top: `${vSyncY}px`, background: '#fff' }} />
-        <div style={{ ...baseTextStyle, color: '#fff', top: `${vSyncY - 2}px` }}>VSYNC</div>
-
-        <Handle type="target" position={Position.Left} id="hsync" style={{ ...handleStyleBase, top: `${hSyncY}px`, background: '#fff' }} />
-        <div style={{ ...baseTextStyle, color: '#fff', top: `${hSyncY - 2}px` }}>HSYNC</div>
-
-        {renderColorBus('r', '#ff4444', 'R[0..7]', redBusStartY)}
-        {renderColorBus('g', '#44ff44', 'G [0..7]', greenBusStartY)}
-        {renderColorBus('b', '#4444ff', 'B[0..7]', blueBusStartY)}
+        <div style={{ padding: '5px 15px', fontSize: '9px', color: '#666', fontFamily: 'monospace', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #333' }}>
+          <span>VGA_INTERFACE_V1_WIDE</span>
+          <span style={{ color: '#00ff00' }}>ONLINE</span>
+        </div>
       </div>
-
-      <div style={{ padding: '5px 15px', fontSize: '9px', color: '#666', fontFamily: 'monospace', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #333' }}>
-        <span>VGA_INTERFACE_V1_WIDE</span>
-        <span style={{ color: '#00ff00' }}>ONLINE</span>
-      </div>
-    </div>
+    </>
   );
 };

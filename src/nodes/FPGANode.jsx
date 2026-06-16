@@ -1,15 +1,15 @@
 /**
  * ARQUIVO: FPGANode.jsx
  * CAMADA: Advanced Component Layer / Reconfigurable Hardware
- * ATUALIZAÇÃO: Integrado NodeResizer nativo. Permite redimensionar o chip
- * arrastando as bordas, recalculando dinamicamente a posição dos pinos.
+ * ATUALIZAÇÃO: Integrado NodeResizer nativo. Alças de redimensionamento 
+ * personalizadas (maiores e com zIndex alto) para facilitar o arraste.
  */
 
 import React, { useEffect } from 'react';
-// 1. Importação do NodeResizer
+// Importação do NodeResizer
 import { Handle, Position, useUpdateNodeInternals, NodeResizer } from 'reactflow';
 
-// 2. Recebendo a propriedade "selected" nativa do React Flow
+// Recebendo a propriedade "selected" nativa do React Flow
 export const FPGANode = ({ id, data, selected }) => {
   const updateNodeInternals = useUpdateNodeInternals();
 
@@ -18,7 +18,7 @@ export const FPGANode = ({ id, data, selected }) => {
     inputs_top = 0,    
     outputs_right = 1, 
     outputs_bottom = 0,
-    // Removeremos o "scale" daqui pois o controle será por largura/altura física
+    // O controle é por largura/altura física injetada pelo React Flow
     width = 350,   // Tamanho inicial padrão
     height = 350   // Tamanho inicial padrão
   } = data;
@@ -31,13 +31,24 @@ export const FPGANode = ({ id, data, selected }) => {
     return () => clearTimeout(timer);
   }, [id, inputs_left, inputs_top, outputs_right, outputs_bottom, width, height, updateNodeInternals]);
 
+  // Estilo das alças de conexão (handles) dos pinos
   const handleStyle = {
     background: '#1a1a1a', 
-    width: '6px',
-    height: '6px',
+    width: '3px',
+    height: '3px',
     border: '1px solid #a0a0a0', 
-    zIndex: 10,
+    zIndex: 10, // Z-index dos handles de conexão
     position: 'absolute'
+  };
+
+  // --- NOVO ESTILO DAS ALÇAS DE REDIMENSIONAMENTO ---
+  const resizerHandleStyle = {
+    width: '10px', // Maior que o padrão (que é 10px) para facilitar o clique
+    height: '10px',
+    background: '#00ff00', // Mesma cor do seu tema
+    border: '2px solid #ffffff', // Borda branca para visibilidade
+    borderRadius: '50%', // Alças redondas
+    zIndex: 100, // Z-index MUITO ALTO para ficar acima dos pinos (zIndex: 1) e handles (zIndex: 10)
   };
 
   const renderPins = (count, side, handlePosition, type) => {
@@ -78,20 +89,19 @@ export const FPGANode = ({ id, data, selected }) => {
 
   return (
     <>
-      {/* 3. O COMPONENTE DE REDIMENSIONAMENTO */}
-      {/* color="#00ff00" faz as bolinhas combinarem com sua paleta de cores */}
-      {/* isVisible={selected} garante que as bolinhas só apareçam ao clicar no nó */}
+      {/* O COMPONENTE DE REDIMENSIONAMENTO ATUALIZADO */}
       <NodeResizer 
-        color="#00ff00" 
+        color="#00ff00" // Cor da linha de redimensionamento
         isVisible={selected} 
-        minWidth={100}  // Impede que o chip fique pequeno demais e esconda o texto
+        minWidth={100}
         minHeight={100}
+        handleStyle={resizerHandleStyle} // Aplica o estilo customizado para todas as alças (cantos e bordas)
       />
 
-      {/* 4. A DIV PRINCIPAL AGORA USA AS DIMENSÕES INJETADAS PELO NODE */}
+      {/* A DIV PRINCIPAL AGORA USA AS DIMENSÕES INJETADAS PELO NODE */}
       <div style={{
-        width: '100%',  // Preenche a área delimitada pelo NodeResizer
-        height: '100%', // Preenche a área delimitada pelo NodeResizer
+        width: '100%',
+        height: '100%',
         background: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)',
         border: '2px solid #111', 
         borderRadius: '4px', 
@@ -100,19 +110,17 @@ export const FPGANode = ({ id, data, selected }) => {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        // REMOVIDO: transform: scale() e transformOrigin
       }}>
         <div style={{ position: 'absolute', top: '15px', left: '15px', width: '12px', height: '12px', background: '#000', borderRadius: '50%', border: '1px solid #333' }} />
         
         <div style={{ textAlign: 'center', userSelect: 'none', fontFamily: 'monospace', padding: '0 40px' }}>
           <div style={{ 
             color: '#fff', 
-            // Opcional: Você pode querer adicionar lógica para o texto escalar junto, 
-            // mas por enquanto mantemos fixo para garantir a legibilidade.
             fontSize: '32px', 
             fontWeight: 'bold', 
             letterSpacing: '4px',
             wordBreak: 'break-word',
+            wordWrap: 'break-word',
             textTransform: 'uppercase' 
           }}>
             {data.label || 'FPGA'}
