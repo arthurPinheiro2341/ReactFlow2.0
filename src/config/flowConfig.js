@@ -42,18 +42,5 @@ export const nodeTypes = {
  * Útil para testes de integração e validação de fluxo de dados (Smoke Testing).
  */
 export const initialNodes = [
-    // Instancia um Data Bus na coordenada (50, 50) com valor default 5
-    { 
-      id: 'const-1', 
-      type: 'constant', 
-      position: { x: 50, y: 50 }, 
-      data: { value: 5 } 
-    },
-    // Instancia um Display Decodificador na coordenada (250, 50)
-    { 
-      id: 'digit-1', 
-      type: 'digit', 
-      position: { x: 250, y: 50 }, 
-      data: { value: 0 } 
-    }
+    
 ];
