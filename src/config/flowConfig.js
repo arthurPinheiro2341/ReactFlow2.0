@@ -14,6 +14,7 @@ import { ConstantNode } from '../nodes/ConstantNode';
 import { FPGANode } from '../nodes/FPGANode';
 import { ClockNode } from '../nodes/ClockNode';
 import { DisplayNode } from '../nodes/DisplayNode';
+import { GroupNode } from '../components/GroupNode';
 
 
 /**
@@ -31,6 +32,7 @@ export const nodeTypes = {
     constant: ConstantNode,
     display: DisplayNode,
     clock: ClockNode,
+    groupNode: GroupNode,
     fpga: FPGANode // Integração do Core de Lógica Programável
 };
 
