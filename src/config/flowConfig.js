@@ -15,7 +15,7 @@ import { FPGANode } from '../nodes/FPGANode';
 import { ClockNode } from '../nodes/ClockNode';
 import { DisplayNode } from '../nodes/DisplayNode';
 import { GroupNode } from '../components/GroupNode';
-
+import { BoardNode } from '../components/BoardNode'; 
 
 /**
  * REGISTRO DE TIPOS (nodeTypes):
@@ -33,7 +33,8 @@ export const nodeTypes = {
     display: DisplayNode,
     clock: ClockNode,
     groupNode: GroupNode,
-    fpga: FPGANode // Integração do Core de Lógica Programável
+    fpga: FPGANode,
+    board: BoardNode 
 };
 
 /**

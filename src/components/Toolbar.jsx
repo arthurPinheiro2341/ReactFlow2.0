@@ -51,6 +51,19 @@ export const Toolbar = ({ addNode, clearBoard }) => {
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         
+        {/* ================= SESSÃO: BOARDS ================= */}
+        <div style={sectionTitleStyle}>Boards</div>
+        
+        <div style={itemStyle} onClick={() => addNode('board')} onMouseEnter={(e) => e.currentTarget.style.background='#222'} onMouseLeave={(e) => e.currentTarget.style.background='transparent'}>
+           {/* Mini Placa de Circuito */}
+           <div style={{ width: 28, height: 20, background: '#1a4a2a', border: '1px solid #111', borderRadius: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+             <div style={{ position: 'absolute', top: 2, left: 2, width: 3, height: 3, background: '#fff', borderRadius: '50%', opacity: 0.5 }}></div>
+             <div style={{ position: 'absolute', bottom: 2, right: 2, width: 3, height: 3, background: '#fff', borderRadius: '50%', opacity: 0.5 }}></div>
+             <div style={{ width: 12, height: 12, background: '#111', border: '1px solid #333' }}></div>
+           </div>
+           Placa Base
+        </div>
+
         {/* ================= SESSÃO: INPUTS ================= */}
         <div style={sectionTitleStyle}>Inputs</div>
         

@@ -1,22 +1,6 @@
 /* App.css */
 
-/* ESSA É A PARTE PRINCIPAL: Alvo na camada que sofre transformação (Zoom/Pan) */
-.react-flow__viewport {
-  
-  background-image: url(assets/image-removebg-preview.png) !important;
-  background-repeat: no-repeat !important;
-  background-size: 1100px !important; /* Ajuste este valor conforme o tamanho inicial desejado */
-  background-position: center !important;
-  /* Opacidade baixa (0.7) */
-  opacity: 0.7 !important; 
-
-  background-size: var(--bg-size, 1100px) !important;
-  background-position: center !important;
-  opacity: 0.7 !important;
-}
-
-
-/* Opcional: Garante que o fundo do canvas geral seja preto profundo */
+/* Garante que o fundo do canvas geral seja preto profundo */
 .react-flow {
   background-color: #0a0a0a !important;
 }

@@ -12,6 +12,10 @@ export const BoardNode = ({ id, data, selected }) => {
     border: '2px solid #ffffff', borderRadius: '50%', zIndex: 100
   };
 
+  // CORREÇÃO AQUI: Transforma barras invertidas (\) em barras normais (/)
+  // Isso garante que o caminho "src\assets\imagem.png" vire "src/assets/imagem.png"
+  const imageUrl = data.imageUrl ? data.imageUrl.replace(/\\/g, '/') : '';
+
   return (
     <>
       <NodeResizer 
@@ -24,10 +28,10 @@ export const BoardNode = ({ id, data, selected }) => {
       
       <div style={{
         width: '100%', height: '100%',
-        // Se tiver imagem, usa ela. Se não, usa um fundo cinza escuro.
-        backgroundImage: data.imageUrl ? `url(${data.imageUrl})` : 'none',
+        // Passamos a usar a variável tratada 'imageUrl' aqui em vez de 'data.imageUrl'
+        backgroundImage: imageUrl ? `url(${imageUrl})` : 'none',
         backgroundColor: '#111',
-        backgroundSize: '100% 100%', // Estica a imagem para preencher todo o nó
+        backgroundSize: '100% 100%', 
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
         border: '4px solid #333',
@@ -36,8 +40,8 @@ export const BoardNode = ({ id, data, selected }) => {
         position: 'relative'
       }}>
         
-        {/* TEXTO DE AVISO (Some se você colocar uma imagem) */}
-        {!data.imageUrl && (
+        {/* TEXTO DE AVISO */}
+        {!imageUrl && (
           <div style={{
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
             color: '#444', fontFamily: 'monospace', fontSize: '24px', fontWeight: 'bold', 
