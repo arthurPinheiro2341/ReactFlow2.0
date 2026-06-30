@@ -1,7 +1,6 @@
 ﻿/**
  * ARQUIVO: App.jsx
- * ATUALIZAÇÃO: Removido o nó inicial. O simulador inicia 100% vazio 
- * e a limpeza da placa zera completamente os componentes.
+ * ATUALIZAÇÃO: Integrada a lógica de Salvar e Carregar presets do circuito em JSON.
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -13,12 +12,54 @@ import { nodeTypes } from './config/flowConfig';
 import { useCircuit } from './hooks/useCircuit';
 import { useKeyboard } from './hooks/useKeyboard';
 import { Toolbar } from './components/Toolbar';
-import { PropertiesSidebar } from './components/PropertiesSidebar';
+import { PropertiesSidebar } from './components/PropertiesSidebar'; 
 
 export default function App() {
-  // Inicia 100% vazio
   const [nodes, setNodes] = useState([]); 
   const [edges, setEdges] = useState([]);
+
+  // ================= SISTEMA DE SAVE / LOAD =================
+  const handleSave = useCallback(() => {
+    // Captura o estado atual
+    const circuitPreset = { nodes, edges };
+    // Converte para JSON formatado (bonito de ler)
+    const jsonString = JSON.stringify(circuitPreset, null, 2);
+    
+    // Cria um arquivo virtual e força o download
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const href = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = 'meu_circuito.json'; // Nome padrão do arquivo
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [nodes, edges]);
+
+  const handleLoad = useCallback((event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const loadedPreset = JSON.parse(e.target.result);
+        if (loadedPreset.nodes && loadedPreset.edges) {
+          setNodes(loadedPreset.nodes);
+          setEdges(loadedPreset.edges);
+        } else {
+          alert('Arquivo JSON inválido ou corrompido.');
+        }
+      } catch (err) {
+        alert('Erro ao ler o arquivo. Certifique-se de que é um JSON válido.');
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reseta o input para permitir carregar o mesmo arquivo duas vezes seguidas, se necessário
+    event.target.value = null; 
+  }, []);
+  // ==========================================================
 
   const updateNodeData = useCallback((id, newData) => setNodes((nds) => nds.map((node) => node.id === id ? { ...node, data: { ...node.data, ...newData } } : node)), []);
   const setButtonState = useCallback((id, isPressed) => setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, pressed: isPressed } } : n)), []);
@@ -126,17 +167,17 @@ export default function App() {
 
   const addNode = (type, color) => {
     const id = `${type}-${Date.now()}`;
-    let defaultStyle = { width: 60, height: 60 }; 
+    let defaultStyle = { width: 80, height: 80 }; 
     
     if (type === 'board') defaultStyle = { width: 800, height: 600 };
     else if (type === 'fpga') defaultStyle = { width: 350, height: 350 };
     else if (type === 'clock') defaultStyle = { width: 150, height: 60 };
-    else if (type === 'constant') defaultStyle = { width: 90, height: 80 };
+    else if (type === 'constant') defaultStyle = { width: 120, height: 95 }; 
     else if (type === 'display') defaultStyle = { width: 800, height: 500 };
     else if (type === 'digit') defaultStyle = { width: 60, height: 90 };
     else if (type === 'led') defaultStyle = { width: 50, height: 75 };
     else if (type === 'rgb_led') defaultStyle = { width: 50, height: 75 };
-    else if (type === 'switch') defaultStyle = { width: 50, height: 65 };
+    else if (type === 'switch') defaultStyle = { width: 60, height: 80 }; 
 
     const newNode = {
       id, type, position: { x: 100, y: 100 }, style: defaultStyle, 
@@ -168,8 +209,14 @@ export default function App() {
 
   return (
     <div className="app" style={{ display: 'flex', width: '100vw', height: '100vh', background: '#0a0a0a', overflow: 'hidden' }}>
-      {/* O clearBoard agora zera completamente a lista de nós */}
-      <Toolbar addNode={addNode} clearBoard={() => { if (window.confirm("Limpar placa?")) { setNodes([]); setEdges([]); } }} />
+      
+      {/* TOOLBAR COM AS NOVAS FUNÇÕES DE SAVE/LOAD INJETADAS */}
+      <Toolbar 
+        addNode={addNode} 
+        clearBoard={() => { if (window.confirm("Limpar placa?")) { setNodes([]); setEdges([]); } }} 
+        onSave={handleSave}
+        onLoad={handleLoad}
+      />
 
       <div style={{ flex: 1, position: 'relative' }}>
         <ReactFlow
