@@ -187,6 +187,7 @@ export default function App() {
         inputs_left: type === 'fpga' ? 1 : undefined, inputs_top: type === 'fpga' ? 0 : undefined,
         outputs_right: type === 'fpga' ? 1 : undefined, outputs_bottom: type === 'fpga' ? 0 : undefined,
         label: type === 'fpga' ? "FPGA" : undefined,
+        imageData: type === 'board' ? '' : undefined,
         imageUrl: type === 'board' ? '' : undefined 
       }
     };

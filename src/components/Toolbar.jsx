@@ -1,6 +1,6 @@
 /**
  * ARQUIVO: src/components/Toolbar.jsx
- * ATUALIZAÇÃO: Adicionados botões e lógica visual para Salvar e Carregar circuitos em JSON.
+ * 
  */
 
 import React from 'react';

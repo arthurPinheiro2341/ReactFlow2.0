@@ -1,6 +1,6 @@
 /**
  * ARQUIVO: BoardNode.jsx
- * DESCRIÇÃO: Nó de fundo (Placa) redimensionável que aceita uma imagem URL.
+ * DESCRIÇÃO: Nó de fundo (Placa) redimensionável que aceita uma imagem local.
  */
 
 import React from 'react';
@@ -12,9 +12,8 @@ export const BoardNode = ({ id, data, selected }) => {
     border: '2px solid #ffffff', borderRadius: '50%', zIndex: 100
   };
 
-  // CORREÇÃO AQUI: Transforma barras invertidas (\) em barras normais (/)
-  // Isso garante que o caminho "src\assets\imagem.png" vire "src/assets/imagem.png"
-  const imageUrl = data.imageUrl ? data.imageUrl.replace(/\\/g, '/') : '';
+  // Prioriza a imagem carregada do computador e mantém suporte a presets antigos com URL.
+  const imageUrl = data.imageData || (data.imageUrl ? data.imageUrl.replace(/\\/g, '/') : '');
 
   return (
     <>
@@ -28,8 +27,7 @@ export const BoardNode = ({ id, data, selected }) => {
       
       <div style={{
         width: '100%', height: '100%',
-        // Passamos a usar a variável tratada 'imageUrl' aqui em vez de 'data.imageUrl'
-        backgroundImage: imageUrl ? `url(${imageUrl})` : 'none',
+        backgroundImage: imageUrl ? `url("${imageUrl}")` : 'none',
         backgroundColor: '#111',
         backgroundSize: '100% 100%', 
         backgroundRepeat: 'no-repeat',
@@ -40,7 +38,6 @@ export const BoardNode = ({ id, data, selected }) => {
         position: 'relative'
       }}>
         
-        {/* TEXTO DE AVISO */}
         {!imageUrl && (
           <div style={{
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
@@ -49,7 +46,7 @@ export const BoardNode = ({ id, data, selected }) => {
           }}>
             PLACA BASE
             <div style={{ fontSize: '12px', marginTop: '10px' }}>
-              (Cole o link da imagem na aba lateral)
+              (Selecione uma imagem na aba lateral)
             </div>
           </div>
         )}

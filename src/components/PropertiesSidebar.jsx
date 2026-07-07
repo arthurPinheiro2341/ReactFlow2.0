@@ -1,6 +1,6 @@
 /**
  * ARQUIVO: src/components/PropertiesSidebar.jsx
- * ATUALIZAÇÃO: Trava removida. Agora o BoardNode pode ser movido para dentro de grupos.
+ * 
  */
 
 import React, { useState } from 'react';
@@ -74,6 +74,29 @@ export const PropertiesSidebar = ({
   const { id, type, data, parentId } = selectedNode;
   const handleChange = (key, value) => updateNodeData(id, { [key]: value });
 
+  // Converte a imagem selecionada em Data URL para que ela possa ser salva no preset JSON.
+  const handleBoardImageUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const imageData = e.target?.result;
+
+      if (typeof imageData === 'string') {
+        updateNodeData(id, { imageData });
+      }
+    };
+
+    reader.onerror = () => {
+      alert('Não foi possível ler a imagem selecionada.');
+    };
+
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  };
+
   const groupChildren = type === 'groupNode' ? nodes.filter(n => n.parentId === id) : [];
   const availableGroups = nodes.filter(n => n.type === 'groupNode');
 
@@ -112,12 +135,11 @@ export const PropertiesSidebar = ({
 
       {type === 'board' && (
         <label style={labelStyle}>
-          URL da Imagem de Fundo: 
+          Imagem de Fundo:
           <input 
-            type="text" 
-            placeholder="src/assets/image.png"
-            value={data.imageUrl || ''} 
-            onChange={(e) => handleChange('imageUrl', e.target.value)} 
+            type="file"
+            accept="image/*" //aceita qualquer tipo de imagem
+            onChange={handleBoardImageUpload}
             style={inputStyle} 
           />
         </label>
