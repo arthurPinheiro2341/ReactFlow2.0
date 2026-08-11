@@ -10,13 +10,15 @@ export const createNetlist = (edges = []) => edges.map((edge) => ({
 }));
 
 /**
- * Imprime uma linha por conexão para facilitar a inspeção do circuito.
+ * Imprime a NetList em formato estruturado e uma linha por conexão.
  */
 export const printNetlist = (netlist, logger = console.log) => {
   if (netlist.length === 0) {
     logger('[NETLIST] (vazia)');
     return;
   }
+
+  console.table(netlist);
 
   netlist.forEach(({ fromNode, fromPort, toNode, toPort }) => {
     logger(`[NETLIST] ${fromNode}.${fromPort ?? '(porta padrão)'} -> ${toNode}.${toPort ?? '(porta padrão)'}`);

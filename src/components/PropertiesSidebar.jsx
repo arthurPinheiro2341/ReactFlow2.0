@@ -180,10 +180,10 @@ export const PropertiesSidebar = ({
       {type === 'fpga' && (
         <>
           <label style={labelStyle}>Label do Chip: <input type="text" value={data.label || ''} onChange={(e) => handleChange('label', e.target.value)} style={inputStyle} /></label>
-          <label style={labelStyle}>Entradas (Esquerda): <input type="number" min="0" value={data.inputs_left || 0} onChange={(e) => handleChange('inputs_left', parseInt(e.target.value) || 0)} style={inputStyle} /></label>
-          <label style={labelStyle}>Entradas (Topo): <input type="number" min="0" value={data.inputs_top || 0} onChange={(e) => handleChange('inputs_top', parseInt(e.target.value) || 0)} style={inputStyle} /></label>
-          <label style={labelStyle}>Saídas (Direita): <input type="number" min="0" value={data.outputs_right || 0} onChange={(e) => handleChange('outputs_right', parseInt(e.target.value) || 0)} style={inputStyle} /></label>
-          <label style={labelStyle}>Saídas (Base): <input type="number" min="0" value={data.outputs_bottom || 0} onChange={(e) => handleChange('outputs_bottom', parseInt(e.target.value) || 0)} style={inputStyle} /></label>
+          <label style={labelStyle}>Entradas (Esquerda): <input type="number" min="0" value={data.inputs_left || 0} onChange={(e) => handleChange('inputs_left', Math.max(0, parseInt(e.target.value, 10) || 0))} style={inputStyle} /></label>
+          <label style={labelStyle}>Entradas (Topo): <input type="number" min="0" value={data.inputs_top || 0} onChange={(e) => handleChange('inputs_top', Math.max(0, parseInt(e.target.value, 10) || 0))} style={inputStyle} /></label>
+          <label style={labelStyle}>Saídas (Direita): <input type="number" min="0" value={data.outputs_right || 0} onChange={(e) => handleChange('outputs_right', Math.max(0, parseInt(e.target.value, 10) || 0))} style={inputStyle} /></label>
+          <label style={labelStyle}>Saídas (Base): <input type="number" min="0" value={data.outputs_bottom || 0} onChange={(e) => handleChange('outputs_bottom', Math.max(0, parseInt(e.target.value, 10) || 0))} style={inputStyle} /></label>
         </>
       )}
 

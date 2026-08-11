@@ -15,6 +15,53 @@ import { Toolbar } from './components/Toolbar';
 import { PropertiesSidebar } from './components/PropertiesSidebar'; 
 import { createNetlist, printNetlist } from './utils/netlist';
 
+const FPGA_PORT_CONFIG = {
+  inputs_left: { side: 'left', handleType: 'in', nodeKey: 'target', handleKey: 'targetHandle' },
+  inputs_top: { side: 'top', handleType: 'in', nodeKey: 'target', handleKey: 'targetHandle' },
+  outputs_right: { side: 'right', handleType: 'out', nodeKey: 'source', handleKey: 'sourceHandle' },
+  outputs_bottom: { side: 'bottom', handleType: 'out', nodeKey: 'source', handleKey: 'sourceHandle' },
+};
+
+const getPresetValidationError = (preset) => {
+  if (!preset || typeof preset !== 'object' || Array.isArray(preset)) {
+    return 'o conteúdo principal deve ser um objeto.';
+  }
+
+  if (!Array.isArray(preset.nodes) || !Array.isArray(preset.edges)) {
+    return 'nodes e edges devem ser listas.';
+  }
+
+  const nodeIds = new Set();
+
+  for (const [index, node] of preset.nodes.entries()) {
+    if (!node || typeof node !== 'object' || typeof node.id !== 'string' || node.id.trim() === '') {
+      return `o node na posição ${index} não possui um ID válido.`;
+    }
+
+    if (nodeIds.has(node.id)) {
+      return `o ID de node "${node.id}" está duplicado.`;
+    }
+
+    nodeIds.add(node.id);
+  }
+
+  for (const [index, edge] of preset.edges.entries()) {
+    if (!edge || typeof edge !== 'object') {
+      return `a edge na posição ${index} é inválida.`;
+    }
+
+    if (!nodeIds.has(edge.source)) {
+      return `a origem da edge na posição ${index} não existe.`;
+    }
+
+    if (!nodeIds.has(edge.target)) {
+      return `o destino da edge na posição ${index} não existe.`;
+    }
+  }
+
+  return null;
+};
+
 export default function App() {
   const [nodes, setNodes] = useState([]); 
   const [edges, setEdges] = useState([]);
@@ -49,13 +96,16 @@ export default function App() {
     reader.onload = (e) => {
       try {
         const loadedPreset = JSON.parse(e.target.result);
-        if (loadedPreset.nodes && loadedPreset.edges) {
-          setNodes(loadedPreset.nodes);
-          setEdges(loadedPreset.edges);
-        } else {
-          alert('Arquivo JSON inválido ou corrompido.');
+        const validationError = getPresetValidationError(loadedPreset);
+
+        if (validationError) {
+          alert(`Preset inválido: ${validationError}`);
+          return;
         }
-      } catch (err) {
+
+        setNodes(loadedPreset.nodes);
+        setEdges(loadedPreset.edges);
+      } catch {
         alert('Erro ao ler o arquivo. Certifique-se de que é um JSON válido.');
       }
     };
@@ -66,14 +116,45 @@ export default function App() {
   }, []);
   // ==========================================================
 
-  const updateNodeData = useCallback((id, newData) => setNodes((nds) => nds.map((node) => node.id === id ? { ...node, data: { ...node.data, ...newData } } : node)), []);
+  const updateNodeData = useCallback((id, newData) => {
+    const updatedPortLimits = Object.entries(newData).flatMap(([key, value]) => {
+      const config = FPGA_PORT_CONFIG[key];
+      const count = Number(value);
+
+      return config && Number.isInteger(count) && count >= 0
+        ? [{ ...config, count }]
+        : [];
+    });
+
+    if (updatedPortLimits.length > 0) {
+      setEdges((eds) => eds.filter((edge) => !updatedPortLimits.some(({ side, handleType, nodeKey, handleKey, count }) => {
+        const handleId = edge[handleKey];
+        const handlePrefix = `${id}-${side}-${handleType}-`;
+
+        if (edge[nodeKey] !== id || typeof handleId !== 'string' || !handleId.startsWith(handlePrefix)) {
+          return false;
+        }
+
+        const portIndex = Number(handleId.slice(handlePrefix.length));
+        return Number.isInteger(portIndex) && portIndex >= count;
+      })));
+    }
+
+    setNodes((nds) => nds.map((node) => node.id === id ? { ...node, data: { ...node.data, ...newData } } : node));
+  }, []);
   const setButtonState = useCallback((id, isPressed) => setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, pressed: isPressed } } : n)), []);
   const toggleButton = useCallback((id) => setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, pressed: !n.data.pressed } } : n)), []);
   
   const onDeleteNode = useCallback((id) => {
-    setNodes((nds) => nds.filter((n) => n.id !== id && n.parentId !== id));
-    setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
-  }, []);
+    const removedNodeIds = new Set([id]);
+
+    nodes.forEach((node) => {
+      if (node.parentId === id) removedNodeIds.add(node.id);
+    });
+
+    setNodes((nds) => nds.filter((node) => !removedNodeIds.has(node.id)));
+    setEdges((eds) => eds.filter((edge) => !removedNodeIds.has(edge.source) && !removedNodeIds.has(edge.target)));
+  }, [nodes]);
 
   const onEdgeClick = useCallback((event, edge) => setEdges((eds) => eds.filter((e) => e.id !== edge.id)), []);
 
@@ -189,6 +270,7 @@ export default function App() {
       zIndex: type === 'board' ? -1 : 0, 
       data: {
         color, pressed: false, hotkey: '', scale: 1, value: type === 'constant' ? 0 : 1,
+        frequency: type === 'clock' ? '25M' : undefined,
         inputs_left: type === 'fpga' ? 1 : undefined, inputs_top: type === 'fpga' ? 0 : undefined,
         outputs_right: type === 'fpga' ? 1 : undefined, outputs_bottom: type === 'fpga' ? 0 : undefined,
         label: type === 'fpga' ? "FPGA" : undefined,
@@ -207,7 +289,7 @@ export default function App() {
       onStart: () => setButtonState(node.id, true),
       onEnd: () => setButtonState(node.id, false),
       onToggle: () => toggleButton(node.id),
-      onValueChange: (val) => updateNodeData(node.id, { value: val })
+      onValueChange: (val) => updateNodeData(node.id, node.type === 'clock' ? { frequency: val } : { value: val })
     }
   })), [nodes, onDeleteNode, toggleButton, setButtonState, updateNodeData]);
 

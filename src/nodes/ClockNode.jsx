@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 import { Handle, Position, useUpdateNodeInternals, NodeResizer } from 'reactflow';
 
 export const ClockNode = ({ id, data, selected }) => {
-  const { frequency = "25M" } = data;
+  const frequency = data.frequency ?? data.value ?? "25M";
   const updateNodeInternals = useUpdateNodeInternals();
 
   useEffect(() => {

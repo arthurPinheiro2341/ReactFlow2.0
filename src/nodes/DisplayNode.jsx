@@ -8,7 +8,9 @@
 import React, { useEffect } from 'react'; 
 import { Handle, Position, useUpdateNodeInternals, NodeResizer } from 'reactflow'; 
 
-export const DisplayNode = ({ id, data, selected }) => { 
+export const DisplayNode = ({ id, data, selected }) => {
+  // Mantém os dados do nó disponíveis para a futura integração High-Speed do VGA.
+  void data;
   const updateNodeInternals = useUpdateNodeInternals();
 
   useEffect(() => {

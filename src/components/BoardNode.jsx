@@ -6,7 +6,7 @@
 import React from 'react';
 import { NodeResizer } from 'reactflow';
 
-export const BoardNode = ({ id, data, selected }) => {
+export const BoardNode = ({ data, selected }) => {
   const resizerHandleStyle = {
     width: '16px', height: '16px', background: '#00ff00',
     border: '2px solid #ffffff', borderRadius: '50%', zIndex: 100

@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 import { Handle, Position, NodeResizer, useUpdateNodeInternals } from 'reactflow';
 
 export const ButtonNode = ({ id, data, selected }) => {
-  const { color = '#1a1a1a', pressed, onToggle } = data;
+  const { pressed, onToggle } = data;
   const updateNodeInternals = useUpdateNodeInternals();
 
   useEffect(() => {
