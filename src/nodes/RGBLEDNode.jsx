@@ -1,8 +1,6 @@
 /**
- * ARQUIVO: RGBLEDNode.jsx
- * CAMADA: Component Layer / Multi-Channel Actuator
- * ATUALIZAÇÃO: NodeResizer implementado. Lente e os três terminais 
- * redimensionados em porcentagem (%) para escalonamento fluido.
+ * Node de saída que combina três canais independentes em um LED RGB.
+ * Cada canal possui um Handle target próprio e contribui para a cor exibida.
  */
 
 import React, { useEffect } from 'react';
@@ -13,7 +11,7 @@ export const RGBLEDNode = ({ id, data, selected }) => {
   const updateNodeInternals = useUpdateNodeInternals();
 
   useEffect(() => {
-    // Força a atualização das 3 conexões se o nó mudar de tamanho
+    // Recalcula a posição dos três Handles após mudanças de dimensão.
     const timer = setTimeout(() => updateNodeInternals(id), 10);
     return () => clearTimeout(timer);
   }, [id, updateNodeInternals]);
@@ -38,13 +36,13 @@ export const RGBLEDNode = ({ id, data, selected }) => {
     border: '2px solid #ffffff', borderRadius: '50%', zIndex: 100
   };
 
-  // HELPER DE LAYOUT ATUALIZADO: Aceita porcentagem (leftPercent)
+  // Posiciona os terminais proporcionalmente para acompanhar o redimensionamento.
   const legStyle = (leftPercent) => ({
-    width: '10%', // Pernas levemente mais finas
-    height: '45%', // Esticam até a base
+    width: '10%',
+    height: '45%',
     background: '#a0a0a0',
     position: 'absolute',
-    top: '55%', // Começam logo abaixo da lente
+    top: '55%',
     left: leftPercent,
     zIndex: 0,
     boxShadow: '2px 2px 4px rgba(0,0,0,0.3)',
@@ -68,7 +66,6 @@ export const RGBLEDNode = ({ id, data, selected }) => {
         alignItems: 'center', position: 'relative' 
       }}>
         
-        {/* 1. CABEÇA DO LED (Domo Skeuomórfico) */}
         <div style={{
             width: '85%',
             height: '55%',
@@ -82,22 +79,16 @@ export const RGBLEDNode = ({ id, data, selected }) => {
             position: 'relative'
         }} />
 
-        {/* 2. BASE DO COMPONENTE */}
         <div style={{ width: '100%', height: '6%', background: '#333', borderRadius: '2px', marginTop: '-2%', zIndex: 1 }} />
 
-        {/* 3. TRIPLO TERMINAL DE ENTRADA (Espaçados por porcentagem) */}
-        
-        {/* Perna R (Red) - 15% da esquerda */}
         <div style={legStyle('15%')}>
           <Handle type="target" position={Position.Bottom} id="r" style={{ background: '#ff4444', bottom: '-4px', width: '8px', height: '8px', border: '1px solid #111' }} />
         </div>
 
-        {/* Perna G (Green) - Centralizada em 45% */}
         <div style={legStyle('45%')}>
           <Handle type="target" position={Position.Bottom} id="g" style={{ background: '#44ff44', bottom: '-4px', width: '8px', height: '8px', border: '1px solid #111' }} />
         </div>
 
-        {/* Perna B (Blue) - 75% da esquerda */}
         <div style={legStyle('75%')}>
           <Handle type="target" position={Position.Bottom} id="b" style={{ background: '#4444ff', bottom: '-4px', width: '8px', height: '8px', border: '1px solid #111' }} />
         </div>

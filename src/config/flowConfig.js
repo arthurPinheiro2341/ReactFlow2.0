@@ -1,8 +1,5 @@
 /**
- * ARQUIVO: flowConfig.js
- * CAMADA: Configuration / Registry Layer
- * DESCRIÇÃO: Define o mapeamento de tipos de nós e o estado inicial do grafo.
- * Este arquivo é essencial para a extensibilidade do sistema (Open/Closed Principle).
+ * Registro central dos componentes visuais aceitos como tipos de node pelo React Flow.
  */
 
 import { ButtonNode } from '../nodes/ButtonNode';
@@ -18,10 +15,7 @@ import { GroupNode } from '../components/GroupNode';
 import { BoardNode } from '../components/BoardNode'; 
 
 /**
- * REGISTRO DE TIPOS (nodeTypes):
- * Este objeto mapeia strings identificadoras aos componentes React correspondentes.
- * Quando o React Flow encontra um nó com type: 'fpga', ele consulta este registro
- * para saber qual lógica de renderização e quais Handles (pinos) deve carregar.
+ * Cada chave corresponde ao campo type persistido nos nodes e presets.
  */
 export const nodeTypes = {
     button: ButtonNode,
@@ -38,9 +32,7 @@ export const nodeTypes = {
 };
 
 /**
- * ESTADO INICIAL (initialNodes):
- * Define a topografia inicial do circuito ao carregar a aplicação.
- * Útil para testes de integração e validação de fluxo de dados (Smoke Testing).
+ * Lista opcional de nodes iniciais, mantida vazia na configuração atual.
  */
 export const initialNodes = [
     

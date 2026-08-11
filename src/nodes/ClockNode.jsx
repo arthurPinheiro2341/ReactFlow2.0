@@ -1,6 +1,6 @@
 /**
- * ARQUIVO: ClockNode.jsx
- * DESCRIÇÃO: Display digital de Clock com redimensionamento nativo.
+ * Node visual de Clock com frequência editável e uma saída source.
+ * Não gera ciclos; apenas representa a configuração atual no frontend.
  */
 
 import React, { useEffect } from 'react';
@@ -11,6 +11,7 @@ export const ClockNode = ({ id, data, selected }) => {
   const updateNodeInternals = useUpdateNodeInternals();
 
   useEffect(() => {
+    // Recalcula a posição do Handle após mudanças de dimensão.
     const timer = setTimeout(() => updateNodeInternals(id), 10);
     return () => clearTimeout(timer);
   }, [id, updateNodeInternals]);
@@ -39,7 +40,6 @@ export const ClockNode = ({ id, data, selected }) => {
         boxShadow: '0 4px 10px rgba(0,0,0,0.8), inset 0 0 10px rgba(0,255,0,0.05)'
       }}>
         
-        {/* ÁREA DO DISPLAY DIGITAL */}
         <div style={{ 
           display: 'flex', alignItems: 'baseline', gap: '4px',
           padding: '5px 10px', background: '#001a00', 
@@ -54,7 +54,7 @@ export const ClockNode = ({ id, data, selected }) => {
             style={{
               width: '100%', background: 'transparent', border: 'none',
               color: '#00ff00', fontFamily: 'monospace', textAlign: 'right',
-              outline: 'none', fontSize: 'clamp(14px, 2.5vw, 24px)', // Tipografia fluida
+              outline: 'none', fontSize: 'clamp(14px, 2.5vw, 24px)',
               fontWeight: 'bold', textShadow: '0 0 8px rgba(0,255,0,0.5)'
             }}
           />

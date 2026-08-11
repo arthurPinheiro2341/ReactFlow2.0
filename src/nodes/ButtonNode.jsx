@@ -1,7 +1,6 @@
 /**
- * ARQUIVO: ButtonNode.jsx
- * CAMADA: Component Layer / Input Node
- * ATUALIZAÇÃO: Implementado NodeResizer para redimensionamento visual livre.
+ * Node de entrada momentânea com uma saída source.
+ * Reflete visualmente o estado pressionado e permite redimensionamento.
  */
 
 import React, { useEffect } from 'react';
@@ -12,6 +11,7 @@ export const ButtonNode = ({ id, data, selected }) => {
   const updateNodeInternals = useUpdateNodeInternals();
 
   useEffect(() => {
+    // Recalcula a posição do Handle após mudanças de dimensão.
     const timer = setTimeout(() => updateNodeInternals(id), 10);
     return () => clearTimeout(timer);
   }, [id, updateNodeInternals]);
@@ -45,9 +45,8 @@ export const ButtonNode = ({ id, data, selected }) => {
           style={{ right: '-5px', background: '#a0a0a0', width: '8px', height: '4px', borderRadius: '0' }} 
         />
 
-        {/* ATUADOR MECÂNICO */}
         <div style={{
-            width: '70%', height: '70%', borderRadius: '50%', // Usa % para crescer com a caixa
+            width: '70%', height: '70%', borderRadius: '50%',
             background: pressed ? '#141414' : `radial-gradient(circle at 30% 30%, #2e2e2e, #050505)`,
             boxShadow: pressed ? 'inset 0 4px 6px rgba(39, 39, 39, 0.9)' : '0 5px 0 #111, 0 8px 15px rgba(0,0,0,0.5)',
             transform: pressed ? 'translateY(3px)' : 'translateY(0px)',

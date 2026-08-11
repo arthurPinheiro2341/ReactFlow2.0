@@ -1,15 +1,11 @@
 /**
- * ARQUIVO: FPGANode.jsx
- * CAMADA: Advanced Component Layer / Reconfigurable Hardware
- * ATUALIZAÇÃO: Integrado NodeResizer nativo. Alças de redimensionamento 
- * personalizadas (maiores e com zIndex alto) para facilitar o arraste.
+ * Node visual da FPGA com quantidade configurável de entradas e saídas.
+ * Distribui Handles nas quatro laterais e preserva um ID único para cada porta.
  */
 
 import React, { useEffect } from 'react';
-// Importação do NodeResizer
 import { Handle, Position, useUpdateNodeInternals, NodeResizer } from 'reactflow';
 
-// Recebendo a propriedade "selected" nativa do React Flow
 export const FPGANode = ({ id, data, selected }) => {
   const updateNodeInternals = useUpdateNodeInternals();
 
@@ -18,39 +14,37 @@ export const FPGANode = ({ id, data, selected }) => {
     inputs_top = 0,    
     outputs_right = 1, 
     outputs_bottom = 0,
-    // O controle é por largura/altura física injetada pelo React Flow
-    width = 350,   // Tamanho inicial padrão
-    height = 350   // Tamanho inicial padrão
+    width = 350,
+    height = 350
   } = data;
 
   useEffect(() => {
-    // Sincroniza as conexões (fios) se o número de pinos ou as dimensões mudarem
+    // Recalcula os pontos de conexão após mudanças nas portas ou dimensões do node.
     const timer = setTimeout(() => {
       updateNodeInternals(id);
     }, 10);
     return () => clearTimeout(timer);
   }, [id, inputs_left, inputs_top, outputs_right, outputs_bottom, width, height, updateNodeInternals]);
 
-  // Estilo das alças de conexão (handles) dos pinos
   const handleStyle = {
     background: '#1a1a1a', 
     width: '3px',
     height: '3px',
     border: '1px solid #a0a0a0', 
-    zIndex: 10, // Z-index dos handles de conexão
+    zIndex: 10,
     position: 'absolute'
   };
 
-  // --- NOVO ESTILO DAS ALÇAS DE REDIMENSIONAMENTO ---
   const resizerHandleStyle = {
-    width: '10px', // Maior que o padrão (que é 10px) para facilitar o clique
+    width: '10px',
     height: '10px',
-    background: '#00ff00', // Mesma cor do seu tema
-    border: '2px solid #ffffff', // Borda branca para visibilidade
-    borderRadius: '50%', // Alças redondas
-    zIndex: 100, // Z-index MUITO ALTO para ficar acima dos pinos (zIndex: 1) e handles (zIndex: 10)
+    background: '#00ff00',
+    border: '2px solid #ffffff',
+    borderRadius: '50%',
+    zIndex: 100,
   };
 
+  // O ID combina node, lateral, direção e índice para identificar cada porta nas edges.
   const renderPins = (count, side, handlePosition, type) => {
     return [...Array(count)].map((_, i) => {
       const positionPercent = `${((i + 1) / (count + 1)) * 100}%`;
@@ -89,16 +83,14 @@ export const FPGANode = ({ id, data, selected }) => {
 
   return (
     <>
-      {/* O COMPONENTE DE REDIMENSIONAMENTO ATUALIZADO */}
       <NodeResizer 
-        color="#00ff00" // Cor da linha de redimensionamento
+        color="#00ff00"
         isVisible={selected} 
         minWidth={100}
         minHeight={100}
-        handleStyle={resizerHandleStyle} // Aplica o estilo customizado para todas as alças (cantos e bordas)
+        handleStyle={resizerHandleStyle}
       />
 
-      {/* A DIV PRINCIPAL AGORA USA AS DIMENSÕES INJETADAS PELO NODE */}
       <div style={{
         width: '100%',
         height: '100%',

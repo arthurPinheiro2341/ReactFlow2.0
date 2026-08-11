@@ -1,6 +1,6 @@
 /**
- * ARQUIVO: src/components/PropertiesSidebar.jsx
- * 
+ * Painel lateral de propriedades e ações sobre a seleção atual.
+ * Edita dados dos nodes, gerencia grupos e converte imagens do Board para Data URL.
  */
 
 import React, { useState } from 'react';
@@ -74,7 +74,7 @@ export const PropertiesSidebar = ({
   const { id, type, data, parentId } = selectedNode;
   const handleChange = (key, value) => updateNodeData(id, { [key]: value });
 
-  // Converte a imagem selecionada em Data URL para que ela possa ser salva no preset JSON.
+  // A Data URL mantém a imagem autocontida quando o circuito é salvo como preset JSON.
   const handleBoardImageUpload = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -138,14 +138,14 @@ export const PropertiesSidebar = ({
           Imagem de Fundo:
           <input 
             type="file"
-            accept="image/*" //aceita qualquer tipo de imagem
+            accept="image/*"
             onChange={handleBoardImageUpload}
             style={inputStyle} 
           />
         </label>
       )}
 
-      {/* DROPDOWN - O boardNode agora tem acesso a este menu */}
+      {/* Associa um node livre a um grupo já existente. */}
       {!parentId && type !== 'groupNode' && availableGroups.length > 0 && (
         <div style={{ marginTop: '10px', borderTop: '1px solid #333', paddingTop: '15px', paddingBottom: '5px' }}>
           <h4 style={{ color: '#aaa', fontSize: '11px', margin: '0 0 8px 0' }}>Envelopar em:</h4>
@@ -172,7 +172,6 @@ export const PropertiesSidebar = ({
          <button onClick={() => onRemoveFromGroup(id)} style={{ ...actionBtnStyle, color: '#ffaa00', borderColor: '#ffaa00', marginTop: '10px' }}>📤 Remover deste Grupo</button>
       )}
 
-      {/* ESCALA ANTIGA */}
       {!['groupNode', 'board'].includes(type) && (
         <label style={labelStyle}>Tamanho (Escala): <input type="number" step="0.1" min="0.5" max="3" value={data.scale || 1} onChange={(e) => handleChange('scale', parseFloat(e.target.value) || 1)} style={inputStyle} /></label>
       )}

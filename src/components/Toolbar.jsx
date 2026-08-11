@@ -1,6 +1,6 @@
 /**
- * ARQUIVO: src/components/Toolbar.jsx
- * 
+ * Barra lateral de criação de componentes e ações globais do circuito.
+ * Disponibiliza os tipos de node registrados e os controles de preset e limpeza.
  */
 
 import React from 'react';
@@ -49,7 +49,6 @@ export const Toolbar = ({ addNode, clearBoard, onSave, onLoad }) => {
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         
-        {/* ================= SESSÃO: BOARDS ================= */}
         <div style={sectionTitleStyle}>Boards</div>
         <div style={itemStyle} onClick={() => addNode('board')} onMouseEnter={(e) => e.currentTarget.style.background='#222'} onMouseLeave={(e) => e.currentTarget.style.background='transparent'}>
            <div style={{ width: 28, height: 20, background: '#1a4a2a', border: '1px solid #111', borderRadius: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
@@ -60,7 +59,6 @@ export const Toolbar = ({ addNode, clearBoard, onSave, onLoad }) => {
            Placa Base
         </div>
 
-        {/* ================= SESSÃO: INPUTS ================= */}
         <div style={sectionTitleStyle}>Inputs</div>
         <div style={itemStyle} onClick={() => addNode('button')} onMouseEnter={(e) => e.currentTarget.style.background='#222'} onMouseLeave={(e) => e.currentTarget.style.background='transparent'}>
           <div style={{ width: 24, height: 24, background: '#111', borderRadius: '4px', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -83,7 +81,6 @@ export const Toolbar = ({ addNode, clearBoard, onSave, onLoad }) => {
            Clock
         </div>
 
-        {/* ================= SESSÃO: OUTPUTS ================= */}
         <div style={sectionTitleStyle}>Outputs</div>
         <div style={itemStyle} onClick={() => addNode('digit')} onMouseEnter={(e) => e.currentTarget.style.background='#222'} onMouseLeave={(e) => e.currentTarget.style.background='transparent'}>
            <div style={{ width: 18, height: 26, background: '#0a0a0a', border: '1px solid #333', borderRadius: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -113,7 +110,6 @@ export const Toolbar = ({ addNode, clearBoard, onSave, onLoad }) => {
            VGA Display
         </div>
 
-        {/* ================= SESSÃO: PROCESSORS ================= */}
         <div style={sectionTitleStyle}>Processors</div>
         <div style={itemStyle} onClick={() => addNode('fpga')} onMouseEnter={(e) => e.currentTarget.style.background='#222'} onMouseLeave={(e) => e.currentTarget.style.background='transparent'}>
            <div style={{ width: 30, height: 30, background: '#111', border: '1px dashed #555', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
@@ -130,10 +126,9 @@ export const Toolbar = ({ addNode, clearBoard, onSave, onLoad }) => {
         </div>
       </div>
 
-      {/* ================= BOTÕES INFERIORES ================= */}
       <div style={{ padding: '15px', borderTop: '1px solid #333', background: '#0a0a0a' }}>
         
-        {/* INPUT DE ARQUIVO INVISÍVEL */}
+        {/* O botão de carga aciona este input para manter o seletor de arquivo fora do layout. */}
         <input 
           type="file" 
           id="load-circuit-input" 

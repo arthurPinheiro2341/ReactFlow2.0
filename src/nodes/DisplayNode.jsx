@@ -1,15 +1,13 @@
 /**
- * ARQUIVO: DisplayNode.jsx
- * CAMADA: Advanced Output Actuator / Visual Interface
- * ATUALIZAÇÃO: NodeResizer adicionado. Pinos e textos convertidos para 
- * posicionamento em porcentagem (%), permitindo redimensionamento fluido.
+ * Node visual de saída VGA com Handles de sincronismo e canais RGB.
+ * O componente representa a interface no frontend, sem processar vídeo.
  */
 
 import React, { useEffect } from 'react'; 
 import { Handle, Position, useUpdateNodeInternals, NodeResizer } from 'reactflow'; 
 
 export const DisplayNode = ({ id, data, selected }) => {
-  // Mantém os dados do nó disponíveis para a futura integração High-Speed do VGA.
+  // Mantém a prop no contrato do node, embora o render atual ainda não leia seus valores.
   void data;
   const updateNodeInternals = useUpdateNodeInternals();
 
@@ -45,10 +43,10 @@ export const DisplayNode = ({ id, data, selected }) => {
     fontFamily: 'monospace',
     userSelect: 'none',
     left: '12px',
-    transform: 'translateY(-50%)' // Garante que o texto alinhe perfeitamente com o pino
+    transform: 'translateY(-50%)'
   };
 
-  // Função redesenhada para aceitar porcentagem no eixo Y
+  // Cria o rótulo e os oito Handles de um canal, preservando IDs no formato prefixo + índice.
   const renderColorBus = (prefix, color, textLabel, startYPercent) => {
     const textElement = (
       <div key={`${prefix}-label`} style={{ ...baseTextStyle, color: color, top: `${startYPercent}%` }}>
@@ -56,8 +54,8 @@ export const DisplayNode = ({ id, data, selected }) => {
       </div>
     );
 
-    const pitchPercent = 2.85; // Espaçamento entre os pinos em porcentagem
-    const handlesStartTop = startYPercent + 3.5; // Distância do título para o primeiro pino
+    const pitchPercent = 2.85;
+    const handlesStartTop = startYPercent + 3.5;
 
     const handles = [...Array(8)].map((_, i) => {
       const currentTop = handlesStartTop + (i * pitchPercent);
@@ -119,7 +117,6 @@ export const DisplayNode = ({ id, data, selected }) => {
           <Handle type="target" position={Position.Left} id="hsync" style={{ ...handleStyleBase, top: `10%`, background: '#fff' }} />
           <div style={{ ...baseTextStyle, color: '#fff', top: `10%` }}>HSYNC</div>
 
-          {/* O último parâmetro é a posição Y em porcentagem */}
           {renderColorBus('r', '#ff4444', 'R[0..7]', 16)}
           {renderColorBus('g', '#44ff44', 'G[0..7]', 44)}
           {renderColorBus('b', '#4444ff', 'B[0..7]', 72)}

@@ -1,6 +1,6 @@
 /**
- * ARQUIVO: BoardNode.jsx
- * DESCRIÇÃO: Nó de fundo (Placa) redimensionável que aceita uma imagem local.
+ * Node de fundo redimensionável que representa a placa física.
+ * Exibe uma imagem persistida como Data URL ou uma URL legada do preset.
  */
 
 import React from 'react';

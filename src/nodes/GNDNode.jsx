@@ -1,23 +1,15 @@
 /**
- * ARQUIVO: GNDNode.jsx
- * CAMADA: Component Layer / Reference Node
- * STATUS: Inativo (Placeholder para futura implementação de malha fechada).
- * DESCRIÇÃO: Define o ponto de potencial zero (0V). Essencial para a transição
- * de uma simulação de fluxo lógico para uma simulação de regime elétrico real.
+ * Node visual de referência lógica baixa com um Handle source.
+ * O componente existe no código, mas não está registrado entre os tipos ativos do React Flow.
  */
 
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 
 export const GNDNode = () => (
-  // Layout minimalista focado na semântica visual de esquemáticos elétricos.
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
     
-    {/**
-     * SÍMBOLO UNIVERSAL DE TERRA (Ground):
-     * A geometria decrescente [30px -> 20px -> 10px] é um padrão internacional
-     * de simbologia para facilitar a leitura rápida de diagramas técnicos.
-     */}
+    {/* Barras decrescentes formam o símbolo convencional de terra. */}
     <div style={{ width: '30px', height: '2px', background: '#fff', marginBottom: '3px' }} />
     <div style={{ width: '20px', height: '2px', background: '#fff', marginBottom: '3px' }} />
     <div style={{ width: '10px', height: '2px', background: '#fff' }} />

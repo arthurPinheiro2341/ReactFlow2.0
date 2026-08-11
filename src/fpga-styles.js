@@ -1,4 +1,6 @@
-// --- ESTILOS FPGA ---
+/**
+ * Estilos e padrões de segmentos para uma representação alternativa da placa FPGA.
+ */
 export const fpgaStyle = {
   canvas: { 
     width: '100vw', 

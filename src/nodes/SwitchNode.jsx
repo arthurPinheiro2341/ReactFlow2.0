@@ -1,8 +1,6 @@
 /**
- * ARQUIVO: SwitchNode.jsx
- * CAMADA: Component Layer / Input Node (Latching)
- * ATUALIZAÇÃO: NodeResizer implementado. Dimensões relativas em porcentagem 
- * preservam a física da alavanca (flip) independente do tamanho.
+ * Node de entrada com estado retido e uma saída source.
+ * Alterna o estado ao clicar e representa visualmente a posição da chave.
  */
 
 import React, { useEffect } from 'react';
@@ -13,7 +11,7 @@ export const SwitchNode = ({ id, data, selected }) => {
   const updateNodeInternals = useUpdateNodeInternals();
 
   useEffect(() => {
-    // Sincroniza a posição do fio ao redimensionar
+    // Recalcula a posição do Handle após mudanças de dimensão.
     const timer = setTimeout(() => updateNodeInternals(id), 10);
     return () => clearTimeout(timer);
   }, [id, updateNodeInternals]);
@@ -42,12 +40,11 @@ export const SwitchNode = ({ id, data, selected }) => {
           alignItems: pressed ? 'flex-start' : 'flex-end', 
           padding: '10%', borderRadius: '3px',
           transition: 'all 0.2s ease-in-out',
-          boxSizing: 'border-box' // Garante que o padding não estoure a caixa do resizer
+          boxSizing: 'border-box'
         }}
       >
         <Handle type="source" position={Position.Right} id="out" style={switchHandleStyle} />
         
-        {/* ALAVANCA DO SWITCH */}
         <div style={{ 
           width: '100%', height: '45%', 
           background: '#555', border: '1px solid #111', borderRadius: '2px',

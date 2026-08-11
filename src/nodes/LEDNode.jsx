@@ -1,8 +1,6 @@
 /**
- * ARQUIVO: LEDNode.jsx
- * CAMADA: Component Layer / Output Actuator
- * ATUALIZAÇÃO: NodeResizer implementado. Lente, anel e haste 
- * dimensionados em porcentagem para escalarem juntos perfeitamente.
+ * Node de saída que representa um LED de canal único.
+ * O estado visual é controlado pelo dado active recebido da propagação mock.
  */
 
 import React, { useEffect } from 'react';
@@ -13,7 +11,7 @@ export const LEDNode = ({ id, data, selected }) => {
   const updateNodeInternals = useUpdateNodeInternals();
 
   useEffect(() => {
-    // Sincroniza a conexão (fio) caso o LED estique/encolha
+    // Recalcula a posição do Handle após mudanças de dimensão.
     const timer = setTimeout(() => updateNodeInternals(id), 10);
     return () => clearTimeout(timer);
   }, [id, updateNodeInternals]);
@@ -39,7 +37,6 @@ export const LEDNode = ({ id, data, selected }) => {
         position: 'relative'
       }}>
         
-        {/* LENTE DE EPÓXI (Bulb) */}
         <div style={{
             width: '85%', height: '55%', 
             borderRadius: '50% 50% 10% 10%', 
@@ -54,7 +51,6 @@ export const LEDNode = ({ id, data, selected }) => {
           }}
         />
         
-        {/* ANEL DA BASE DO LED (Rim) */}
         <div style={{ 
             width: '100%', height: '8%', 
             background: '#333', borderRadius: '2px', 
@@ -62,7 +58,6 @@ export const LEDNode = ({ id, data, selected }) => {
           }} 
         />
         
-        {/* PERNA METÁLICA (Leg) */}
         <div style={{ 
             width: '12%', height: '37%', 
             background: '#a0a0a0', position: 'relative', 

@@ -1,7 +1,6 @@
 /**
- * ARQUIVO: GroupNode.jsx
- * DESCRIÇÃO: Contêiner visual para agrupar múltiplos nós. 
- * Aceita redimensionamento livre e exibe um rótulo no topo.
+ * Contêiner visual redimensionável para nodes agrupados no React Flow.
+ * Exibe o rótulo do grupo sem interferir na visualização da placa ao fundo.
  */
 
 import React from 'react';
@@ -25,12 +24,11 @@ export const GroupNode = ({ data, selected }) => {
       
       <div style={{
         width: '100%', height: '100%',
-        background: 'rgba(30, 30, 30, 0.4)', // Fundo translúcido para ver a placa
-        border: '2px dashed #555', // Borda tracejada clássica de agrupamento
+        background: 'rgba(30, 30, 30, 0.4)',
+        border: '2px dashed #555',
         borderRadius: '8px',
         position: 'relative'
       }}>
-        {/* RÓTULO DO GRUPO (Label) */}
         <div style={{
           position: 'absolute', top: '-25px', left: '0',
           color: '#aaa', fontSize: '14px', fontFamily: 'monospace', 

@@ -1,6 +1,4 @@
-/* App.css */
-
-/* Garante que o fundo do canvas geral seja preto profundo */
+/* Mantém o canvas do React Flow alinhado ao fundo escuro da aplicação. */
 .react-flow {
   background-color: #0a0a0a !important;
 }

@@ -1,7 +1,6 @@
 /**
- * ARQUIVO: ConstantNode.jsx
- * CAMADA: Component Layer / Data Source
- * DESCRIÇÃO: Gerador de sinais escalares com NodeResizer integrado.
+ * Node de entrada para um valor escalar ajustável.
+ * Expõe o valor atual por um único Handle source.
  */
 
 import React, { useEffect } from 'react';

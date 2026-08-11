@@ -1,6 +1,6 @@
 ﻿/**
- * ARQUIVO: App.jsx
- * ATUALIZAÇÃO: Integrada a lógica de Salvar e Carregar presets do circuito em JSON.
+ * Componente principal do editor de circuitos.
+ * Gerencia nodes, edges, NetList, presets, grupos e callbacks usados pelos nodes do React Flow.
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
@@ -15,6 +15,7 @@ import { Toolbar } from './components/Toolbar';
 import { PropertiesSidebar } from './components/PropertiesSidebar'; 
 import { createNetlist, printNetlist } from './utils/netlist';
 
+// Relaciona cada contador de portas da FPGA ao padrão de Handle e ao lado correspondente da edge.
 const FPGA_PORT_CONFIG = {
   inputs_left: { side: 'left', handleType: 'in', nodeKey: 'target', handleKey: 'targetHandle' },
   inputs_top: { side: 'top', handleType: 'in', nodeKey: 'target', handleKey: 'targetHandle' },
@@ -22,6 +23,7 @@ const FPGA_PORT_CONFIG = {
   outputs_bottom: { side: 'bottom', handleType: 'out', nodeKey: 'source', handleKey: 'sourceHandle' },
 };
 
+// Faz uma validação estrutural mínima antes de entregar um preset ao React Flow.
 const getPresetValidationError = (preset) => {
   if (!preset || typeof preset !== 'object' || Array.isArray(preset)) {
     return 'o conteúdo principal deve ser um objeto.';
@@ -66,28 +68,28 @@ export default function App() {
   const [nodes, setNodes] = useState([]); 
   const [edges, setEdges] = useState([]);
 
+  // A NetList é sempre derivada das edges atuais; ela não mantém estado de conexões próprio.
   useEffect(() => {
     printNetlist(createNetlist(edges));
   }, [edges]);
 
-  // ================= SISTEMA DE SAVE / LOAD =================
   const handleSave = useCallback(() => {
-    // Captura o estado atual
+    // Preserva a estrutura de nodes e edges usada pelo React Flow no arquivo JSON.
     const circuitPreset = { nodes, edges };
-    // Converte para JSON formatado (bonito de ler)
     const jsonString = JSON.stringify(circuitPreset, null, 2);
     
-    // Cria um arquivo virtual e força o download
+    // Gera o download no navegador sem depender de armazenamento no servidor.
     const blob = new Blob([jsonString], { type: 'application/json' });
     const href = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = href;
-    link.download = 'meu_circuito.json'; // Nome padrão do arquivo
+    link.download = 'meu_circuito.json';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   }, [nodes, edges]);
 
+  // Carrega somente presets estruturalmente válidos e permite selecionar novamente o mesmo arquivo.
   const handleLoad = useCallback((event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -111,11 +113,11 @@ export default function App() {
     };
     reader.readAsText(file);
     
-    // Reseta o input para permitir carregar o mesmo arquivo duas vezes seguidas, se necessário
+    // Limpa o input para que o navegador dispare onChange ao selecionar novamente o mesmo arquivo.
     event.target.value = null; 
   }, []);
-  // ==========================================================
 
+  // Ao reduzir portas da FPGA, remove apenas edges ligadas aos Handles que deixaram de existir.
   const updateNodeData = useCallback((id, newData) => {
     const updatedPortLimits = Object.entries(newData).flatMap(([key, value]) => {
       const config = FPGA_PORT_CONFIG[key];
@@ -145,6 +147,7 @@ export default function App() {
   const setButtonState = useCallback((id, isPressed) => setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, pressed: isPressed } } : n)), []);
   const toggleButton = useCallback((id) => setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, pressed: !n.data.pressed } } : n)), []);
   
+  // A exclusão de um grupo inclui seus filhos diretos e todas as edges incidentes nesses nodes.
   const onDeleteNode = useCallback((id) => {
     const removedNodeIds = new Set([id]);
 
@@ -158,6 +161,7 @@ export default function App() {
 
   const onEdgeClick = useCallback((event, edge) => setEdges((eds) => eds.filter((e) => e.id !== edge.id)), []);
 
+  // Converte as posições absolutas dos nodes selecionados em posições relativas ao novo grupo.
   const handleGroupNodes = useCallback(() => {
     const selected = nodes.filter(n => n.selected && n.type !== 'board' && !n.parentId); 
     if (selected.length < 2) return;
@@ -190,6 +194,7 @@ export default function App() {
     });
   }, [nodes]);
 
+  // Restaura as posições absolutas dos filhos antes de remover o contêiner do grupo.
   const handleUngroupNode = useCallback((groupId) => {
     setNodes(nds => {
       const groupNode = nds.find(n => n.id === groupId);
@@ -204,6 +209,7 @@ export default function App() {
     });
   }, []);
 
+  // Move um node existente para o sistema de coordenadas relativo do grupo escolhido.
   const handleAddToSpecificGroup = useCallback((nodeId, groupId) => {
     setNodes(nds => {
       const groupNode = nds.find(n => n.id === groupId);
@@ -225,6 +231,7 @@ export default function App() {
     });
   }, []);
 
+  // Retira um filho do grupo sem alterar sua posição visual absoluta no canvas.
   const handleRemoveFromGroup = useCallback((childId) => {
     setNodes(nds => {
       const nodeToRemove = nds.find(n => n.id === childId);
@@ -251,6 +258,7 @@ export default function App() {
   useCircuit(nodes, edges, setNodes);
   useKeyboard(nodes, setButtonState, toggleButton);
 
+  // Cria nodes com os dados e dimensões iniciais esperados por cada componente visual.
   const addNode = (type, color) => {
     const id = `${type}-${Date.now()}`;
     let defaultStyle = { width: 80, height: 80 }; 
@@ -281,6 +289,7 @@ export default function App() {
     setNodes((nds) => nds.concat(newNode));
   };
 
+  // Injeta callbacks transitórios nos dados renderizados sem serializá-los no estado dos presets.
   const nodesWithLogic = useMemo(() => nodes.map((node) => ({
     ...node,
     data: {
@@ -298,7 +307,6 @@ export default function App() {
   return (
     <div className="app" style={{ display: 'flex', width: '100vw', height: '100vh', background: '#0a0a0a', overflow: 'hidden' }}>
       
-      {/* TOOLBAR COM AS NOVAS FUNÇÕES DE SAVE/LOAD INJETADAS */}
       <Toolbar 
         addNode={addNode} 
         clearBoard={() => { if (window.confirm("Limpar placa?")) { setNodes([]); setEdges([]); } }} 
