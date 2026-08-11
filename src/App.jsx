@@ -3,7 +3,7 @@
  * ATUALIZAÇÃO: Integrada a lógica de Salvar e Carregar presets do circuito em JSON.
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import ReactFlow, { Background, Controls, addEdge, applyEdgeChanges, applyNodeChanges } from 'reactflow';
 import 'reactflow/dist/style.css';
 import './App.css';
@@ -13,10 +13,15 @@ import { useCircuit } from './hooks/useCircuit';
 import { useKeyboard } from './hooks/useKeyboard';
 import { Toolbar } from './components/Toolbar';
 import { PropertiesSidebar } from './components/PropertiesSidebar'; 
+import { createNetlist, printNetlist } from './utils/netlist';
 
 export default function App() {
   const [nodes, setNodes] = useState([]); 
   const [edges, setEdges] = useState([]);
+
+  useEffect(() => {
+    printNetlist(createNetlist(edges));
+  }, [edges]);
 
   // ================= SISTEMA DE SAVE / LOAD =================
   const handleSave = useCallback(() => {
