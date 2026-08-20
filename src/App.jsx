@@ -163,7 +163,7 @@ export default function App() {
 
   // Converte as posições absolutas dos nodes selecionados em posições relativas ao novo grupo.
   const handleGroupNodes = useCallback(() => {
-    const selected = nodes.filter(n => n.selected && n.type !== 'board' && !n.parentId); 
+    const selected = nodes.filter(n => n.selected && !n.parentId);
     if (selected.length < 2) return;
 
     const minX = Math.min(...selected.map(n => n.position.x));
