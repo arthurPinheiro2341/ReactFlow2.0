@@ -28,6 +28,11 @@ export const PropertiesSidebar = ({
   const inputStyle = { background: '#1a1a1a', border: '1px solid #444', color: '#00ff00', padding: '8px', borderRadius: '4px', fontFamily: 'monospace', outline: 'none' };
   const actionBtnStyle = { background: '#1a1a1a', border: '1px solid #00ff00', color: '#00ff00', padding: '10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' };
   const smallRemoveBtnStyle = { background: 'rgba(255,0,0,0.1)', color: '#ff4444', border: '1px solid #ff4444', padding: '2px 6px', borderRadius: '3px', cursor: 'pointer', fontSize: '10px' };
+  const groupTip = (
+    <div style={{ background: 'rgba(0, 255, 0, 0.05)', border: '1px solid #2f4f2f', color: '#aaa', padding: '9px', borderRadius: '4px', fontSize: '11px', lineHeight: '1.4' }}>
+      <strong style={{ color: '#00ff00' }}>Dica:</strong> segure <code style={{ color: '#fff', fontFamily: 'monospace' }}>Ctrl</code> e clique nos componentes para selecioná-los e criar um grupo.
+    </div>
+  );
 
   if (!isExpanded) {
     return (
@@ -44,6 +49,7 @@ export const PropertiesSidebar = ({
           <h3 style={{ margin: 0, fontSize: '14px', color: '#fff' }}>⚙️ Propriedades</h3>
           <button onClick={() => setIsExpanded(false)} style={{ background: 'none', border: 'none', color: '#777', cursor: 'pointer', fontSize: '16px' }}>▶</button>
         </div>
+        {groupTip}
         <p style={{ fontSize: '12px', color: '#555', textAlign: 'center', marginTop: '40px' }}>Selecione um componente no circuito para editar.</p>
       </div>
     );
@@ -59,6 +65,7 @@ export const PropertiesSidebar = ({
           <h3 style={{ margin: 0, fontSize: '14px', color: '#00ff00', whiteSpace: 'nowrap' }}>⚙️ Seleção Múltipla</h3>
           <button onClick={() => setIsExpanded(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>▶</button>
         </div>
+        {groupTip}
         <p style={{ fontSize: '12px', color: '#aaa', textAlign: 'center', marginTop: '10px' }}>{selectedNodes.length} componentes selecionados.</p>
         
         {selectedFreeNodes.length > 1 && selectedGroups.length === 0 ? (
@@ -106,6 +113,7 @@ export const PropertiesSidebar = ({
         <h3 style={{ margin: 0, fontSize: '14px', color: '#00ff00', whiteSpace: 'nowrap' }}>⚙️ Propriedades</h3>
         <button onClick={() => setIsExpanded(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '16px' }} title="Minimizar">▶</button>
       </div>
+      {groupTip}
       
       <div style={{ fontSize: '11px', color: '#666', marginBottom: '10px' }}>
         <div><strong>TIPO:</strong> {type.toUpperCase()}</div>
